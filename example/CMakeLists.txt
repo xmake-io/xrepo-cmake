@@ -16,7 +16,7 @@ include(${CMAKE_BINARY_DIR}/xrepo.cmake)
 
 # Call `xrepo_package` function to use gflags 2.2.2 with specific configs.
 xrepo_package("gflags 2.2.2"
- 	MODE debug
+    MODE debug
     CONFIGS "shared=true,mt=true"
     OUTPUT diagnosis)
 
