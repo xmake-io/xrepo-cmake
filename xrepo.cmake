@@ -71,7 +71,7 @@ function(xrepo_package package)
         set(verbose "-q")
     endif()
 
-    message(STATUS "xrepo install ${verbose} ${mode} ${configs} ${package}")
+    message(STATUS "xrepo install ${verbose} ${mode} ${configs} '${package}'")
     execute_process(COMMAND ${xrepo_cmd} install --yes ${verbose} ${mode} ${configs} ${package}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
