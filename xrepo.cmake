@@ -44,6 +44,7 @@ function(xrepo_package package)
     endif()
 
     set(options DIRECTORY_SCOPE)
+    set(one_value_args CONFIGS MODE)
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "" ${ARGN})
 
     if(DEFINED ARG_CONFIGS)
