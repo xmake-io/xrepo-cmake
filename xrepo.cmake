@@ -28,7 +28,7 @@
 # 2. Set variable `foo_INCLUDE_DIR` and `foo_LINK_DIR` to header and library
 #    path.
 #    -  Use these variables in `target_include_directories` and
-#      `target_link_directories` to use the pacakge.
+#      `target_link_directories` to use the package.
 #    - User should figure out what library to use for `target_link_libraries`.
 #    - If `DIRECTORY_SCOPE` is specified, execute following code so the package
 #      can be used in cmake's direcotry scope:
@@ -71,7 +71,7 @@ function(xrepo_package package)
         message(FATAL_ERROR "xrepo install failed, exit code: ${exit_code}")
     endif()
 
-    # Set up variables to use pacakge.
+    # Set up variables to use package.
     # Use cflags to get path to headers. Then we look for lib dir based on headers dir.
     # TODO Find more reliable way to setup for using a package. Maybe change
     # xrepo to support generating cmake find package related code.

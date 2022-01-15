@@ -28,7 +28,7 @@ xrepo_package(
 
 Some of the function arguments correspond directly to Xrepo command options.
 
-After calling `xrepo_pacakge(foo)`, there are two ways to use `foo` package:
+After calling `xrepo_package(foo)`, there are two ways to use `foo` package:
 
 - Call `find_package(foo)` if package provides cmake modules to find it
   - Refer to CMake [`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html) documentation for more details
@@ -41,7 +41,7 @@ After calling `xrepo_pacakge(foo)`, there are two ways to use `foo` package:
     include_directories(foo_INCLUDE_DIR)
     link_directories(foo_LINK_DIR)
   ```
-    
+
 Here's an example `CMakeLists.txt` that uses `gflags` package version 2.2.2
 managed by Xrepo.
 
@@ -62,10 +62,10 @@ endif()
 include(${CMAKE_BINARY_DIR}/xrepo.cmake)
 
 # Call `xrepo_package` function to use gflags 2.2.2 with specific configs.
-xrepo_pacakge("gflags 2.2.2" CONFIGS "shared=true,mt=true")
+xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
 
 # `xrepo_package` sets `gflags_DIR` variable in parent scope because gflags
-# provides cmake modules. So we can now call `find_pacakge` to find gflags
+# provides cmake modules. So we can now call `find_package` to find gflags
 # package.
 find_package(gflags CONFIG COMPONENTS shared)
 ```
