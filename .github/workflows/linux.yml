@@ -31,9 +31,6 @@ jobs:
 
       - name: Tests
         run: |
-          cd example
-          mkdir build
-          cd build
-          cmake ..
+          cmake example
           make
 
