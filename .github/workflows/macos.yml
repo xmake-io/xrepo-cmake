@@ -1,0 +1,33 @@
+name: macOS
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macOS-latest]
+        kind: [static, shared]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: branch@dev
+
+      - name: Installation
+        run: |
+          brew install cmake
+
+      - name: Tests
+        run: |
+          cd example
+          mkdir build
+          cd build
+          cmake ..
+          make
+
