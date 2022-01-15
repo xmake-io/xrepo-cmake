@@ -1,4 +1,57 @@
-# xrepo-cmake
+<div align="center">
+  <a href="https://xrepo.xmake.io">
+    <img width="160" heigth="160" src="https://tboox.org/static/img/xmake/logo256c.png">
+  </a>
+
+  <h1>xrepo-cmake</h1>
+
+  <div>
+    <a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3AWindows">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/Windows/master.svg?style=flat-square&logo=windows" alt="github-ci" />
+    </a>
+    <a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3ALinux">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/Linux/master.svg?style=flat-square&logo=linux" alt="github-ci" />
+    </a>
+    <a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3AmacOS">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/macOS/master.svg?style=flat-square&logo=apple" alt="github-ci" />
+    </a>
+  </div>
+  <div>
+    <a href="https://github.com/xmake-io/xmake/blob/master/LICENSE.md">
+      <img src="https://img.shields.io/github/license/xmake-io/xmake.svg?colorB=f48041&style=flat-square" alt="license" />
+    </a>
+    <a href="https://www.reddit.com/r/xmake/">
+      <img src="https://img.shields.io/badge/chat-on%20reddit-ff3f34.svg?style=flat-square" alt="Reddit" />
+    </a>
+    <a href="https://gitter.im/xmake-io/xmake?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
+      <img src="https://img.shields.io/gitter/room/xmake-io/xmake.svg?style=flat-square&colorB=96c312" alt="Gitter" />
+    </a>
+    <a href="https://t.me/tbooxorg">
+      <img src="https://img.shields.io/badge/chat-on%20telegram-blue.svg?style=flat-square" alt="Telegram" />
+    </a>
+    <a href="https://jq.qq.com/?_wv=1027&k=5hpwWFv">
+      <img src="https://img.shields.io/badge/chat-on%20QQ-ff69b4.svg?style=flat-square" alt="QQ" />
+    </a>
+    <a href="https://discord.gg/xmake">
+      <img src="https://img.shields.io/badge/chat-on%20discord-7289da.svg?style=flat-square" alt="Discord" />
+    </a>
+    <a href="https://xmake.io/#/sponsor">
+      <img src="https://img.shields.io/badge/donate-us-orange.svg?style=flat-square" alt="Donate" />
+    </a>
+  </div>
+
+  <b>CMake wrapper for Xrepo C and C++ package manager.</b><br/>
+</div>
+
+## Supporting the project
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. 🙏
+
+- [Become a sponsor](https://xmake.io/#/about/sponsor)
+
+<a href="https://opencollective.com/xmake#sponsors" target="_blank"><img src="https://opencollective.com/xmake/sponsors.svg?width=890"></a>
+
+## Introduction
 
 CMake wrapper for [Xrepo](https://xrepo.xmake.io/) C and C++ package manager.
 
@@ -12,7 +65,7 @@ Example use cases for this project:
 - New projects which have to use CMake, but want to use Xrepo to manage
   packages.
 
-# Usage
+## Usage
 
 [`xrepo.cmake`](./xrepo.cmake) provides `xrepo_package` function to manage
 packages.
@@ -70,7 +123,7 @@ xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
 find_package(gflags CONFIG COMPONENTS shared)
 ```
 
-# How does it work?
+## How does it work?
 
 [`xrepo.cmake`](./xrepo.cmake) module basically does the following tasks:
 
@@ -82,7 +135,7 @@ The following section is a short introduction to using Xrepo. It helps to
 understand how `xrepo.cmake` works and how to specify some of the options in
 `xrepo_package`.
 
-## Xrepo workflow
+### Xrepo workflow
 
 Assume [Xmake](https://github.com/xmake-io/xmake/) is installed.
 
