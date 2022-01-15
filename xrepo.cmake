@@ -64,8 +64,14 @@ function(xrepo_package package)
         endif()
     endif()
 
-    message(STATUS "xrepo install ${mode} ${configs} ${package}")
-    execute_process(COMMAND ${xrepo_cmd} install --yes --quiet ${mode} ${configs} ${package}
+    if(DEFINED ARG_VERBOSE)
+        set(verbose "-vD")
+	else()
+        set(verbose "-q")
+    endif()
+
+    message(STATUS "xrepo install ${verbose} ${mode} ${configs} ${package}")
+    execute_process(COMMAND ${xrepo_cmd} install --yes ${verbose} ${mode} ${configs} ${package}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
         message(FATAL_ERROR "xrepo install failed, exit code: ${exit_code}")
