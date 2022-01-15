@@ -17,8 +17,8 @@ include(${CMAKE_BINARY_DIR}/xrepo.cmake)
 # Call `xrepo_package` function to use gflags 2.2.2 with specific configs.
 xrepo_package("gflags 2.2.2"
  	MODE debug
-	VERBOSE ON
-	CONFIGS "shared=true,mt=true")
+    CONFIGS "shared=true,mt=true"
+    OUTPUT diagnosis)
 
 # `xrepo_package` sets `gflags_DIR` variable in parent scope because gflags
 # provides cmake modules. So we can now call `find_package` to find gflags

@@ -75,6 +75,7 @@ xrepo_package(
     "foo 1.2.3"
     [CONFIGS feature1=true,feature2=false]
     [MODE debug|release]
+    [OUTPUT verbose|diagnosis|quiet]
     [DIRECTORY_SCOPE]
 )
 ```
