@@ -116,6 +116,7 @@ function(xrepo_package package)
     if(NOT DEFINED XREPO_FETCH_JSON)
         # Detect whether `--json` option is supported.
         execute_process(COMMAND ${XREPO_CMD} fetch --json ${mode} ${configs} ${package}
+                        ERROR_QUIET OUTPUT_QUIET
                         RESULT_VARIABLE exit_code)
         if("${exit_code}" STREQUAL "0")
             set(XREPO_FETCH_JSON ON)
