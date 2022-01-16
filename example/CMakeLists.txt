@@ -25,9 +25,11 @@ xrepo_package("gflags 2.2.2"
 # package.
 find_package(gflags CONFIG COMPONENTS shared)
 
-# Define target
-add_executable(example "")
-target_sources(example PRIVATE
+# Define target. We run cmake in example parent directory, thus we can't use
+# example as target name.
+add_executable(example-bin "")
+target_sources(example-bin PRIVATE
     src/main.cpp
 )
+target_link_libraries(example-bin gflags)
 
