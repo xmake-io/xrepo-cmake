@@ -144,10 +144,22 @@ We can also use it directly in cmake to install packages from third-party reposi
 xrepo_package("conan::gflags/2.2.2")
 ```
 
+#### Conda
+
+```cmake
+xrepo_package("conda::gflags 2.2.2")
+```
+
 #### Vcpkg
 
 ```cmake
 xrepo_package("vcpkg::gflags")
+```
+
+#### Homebrew
+
+```cmake
+xrepo_package("brew::gflags")
 ```
 
 ## How does it work?
