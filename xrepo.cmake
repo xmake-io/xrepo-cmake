@@ -5,9 +5,11 @@
 #         The package name and version recognized by xrepo.
 #     CONFIGS: optional
 #         Run `xrepo info <package>` to see what configs are available.
-#     MODE: optional
+#     MODE: optional, debug|release
 #         If not specified: mode is set to "debug" only when $CMAKE_BUILD_TYPE
 #         is Debug. Otherwise mode is `release`.
+#     OUTPUT: optional, verbose|diagnosis|quiet
+#         Control output for xrepo install command.
 #     DIRECTORY_SCOPE: optional
 #         If specified, setup include and link directories for the package in
 #         CMake directory scope. CMake code in `add_subdirectory` can also use
@@ -19,6 +21,7 @@
 #         "foo 1.2.3"
 #         [CONFIGS feature1=true,feature2=false]
 #         [MODE debug|release]
+#         [OUTPUT verbose|diagnosis|quiet]
 #         [DIRECTORY_SCOPE]
 #     )
 #
@@ -34,20 +37,38 @@
 #      can be used in cmake's direcotry scope:
 #          include_directories(foo_INCLUDE_DIR)
 #          link_directories(foo_LINK_DIR)
-# 3. If package provides cmake modules under `foo_LINK_DIR/cmake/package`,
+# 3. If package provides cmake modules under `${foo_LINK_DIR}/cmake/foo`,
 #    set `foo_DIR` to the module directory so that `find_package(foo)`
 #    can be used.
+
 option(XREPO_PACKAGE_DISABLE "Disable Xrepo Packages" OFF)
-function(xrepo_package package)
-    if (XREPO_PACKAGE_DISABLE)
+
+find_program(XMAKE_CMD xmake)
+set(XREPO_CMD ${XMAKE_CMD} lua private.xrepo)
+
+function(_xrepo_detect_json_support)
+    if(XREPO_PACKAGE_DISABLE)
         return()
     endif()
 
-    find_program(xmake_cmd xmake)
-    if(NOT xmake_cmd)
+    if(${CMAKE_VERSION} VERSION_LESS "3.19")
+        message(WARNING "CMake version < 3.19 has no JSON support, xrepo_package maybe unreliable to setup package variables")
+        set(XREPO_FETCH_JSON OFF PARENT_SCOPE)
+    endif()
+
+    # Postpone xrepo fetch --json support detection until we have installed one package.
+endfunction()
+
+_xrepo_detect_json_support()
+
+function(xrepo_package package)
+    if(XREPO_PACKAGE_DISABLE)
+        return()
+    endif()
+
+    if(NOT XMAKE_CMD)
         message(FATAL_ERROR "xmake executable not found!")
     endif()
-    set(xrepo_cmd ${xmake_cmd} lua private.xrepo)
 
     set(options DIRECTORY_SCOPE)
     set(one_value_args CONFIGS MODE OUTPUT)
@@ -83,34 +104,31 @@ function(xrepo_package package)
     endif()
 
     message(STATUS "xrepo install ${verbose} ${mode} ${configs} '${package}'")
-    execute_process(COMMAND ${xrepo_cmd} install --yes ${verbose} ${mode} ${configs} ${package}
+    execute_process(COMMAND ${XREPO_CMD} install --yes ${verbose} ${mode} ${configs} ${package}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
         message(FATAL_ERROR "xrepo install failed, exit code: ${exit_code}")
     endif()
 
     # Set up variables to use package.
-    # Use cflags to get path to headers. Then we look for lib dir based on headers dir.
-    # TODO Find more reliable way to setup for using a package. Maybe change
-    # xrepo to support generating cmake find package related code.
-    execute_process(COMMAND ${xrepo_cmd} fetch --cflags ${mode} ${configs} ${package}
-                    OUTPUT_VARIABLE cflags_output
-                    RESULT_VARIABLE exit_code)
-    if(NOT "${exit_code}" STREQUAL "0")
-        message(FATAL_ERROR "xrepo fetch failed, exit code: ${exit_code}")
-    endif()
-
-    string(REGEX REPLACE "-I(.*)/include.*" "\\1" install_dir ${cflags_output})
     string(REGEX REPLACE "([^ ]+).*" "\\1" package_name ${package})
-    message(STATUS "xrepo ${package_name} install_dir: ${install_dir}")
 
-    set(${package_name}_INCLUDE_DIR ${install_dir}/include PARENT_SCOPE)
-
-    if(EXISTS ${install_dir}/lib)
-        set(${package_name}_LINK_DIR ${install_dir}/lib PARENT_SCOPE)
+    if(NOT DEFINED XREPO_FETCH_JSON)
+        # Detect whether `--json` option is supported.
+        execute_process(COMMAND ${XREPO_CMD} fetch --json ${mode} ${configs} ${package}
+                        RESULT_VARIABLE exit_code)
+        if("${exit_code}" STREQUAL "0")
+            set(XREPO_FETCH_JSON ON)
+        else()
+            set(XREPO_FETCH_JSON OFF)
+        endif()
+        set(XREPO_FETCH_JSON ${XREPO_FETCH_JSON} PARENT_SCOPE)
     endif()
-    if(EXISTS ${install_dir}/lib/cmake/${package_name})
-        set(${package_name}_DIR ${install_dir}/lib/cmake/${package_name} PARENT_SCOPE)
+
+    if(XREPO_FETCH_JSON)
+        _xrepo_fetch_json()
+    else()
+        _xrepo_fetch_cflags()
     endif()
 
     if(_XREPO_DIRECTORY_SCOPE)
@@ -131,3 +149,95 @@ function(_validate_mode mode)
     endif()
 endfunction()
 
+macro(_xrepo_fetch_json)
+    execute_process(COMMAND ${XREPO_CMD} fetch --json ${mode} ${configs} ${package}
+                    OUTPUT_VARIABLE json_output
+                    RESULT_VARIABLE exit_code)
+    if(NOT "${exit_code}" STREQUAL "0")
+        message(FATAL_ERROR "xrepo fetch --json failed, exit code: ${exit_code}")
+    endif()
+
+    # Loop over out most array for the json object.
+    # The following code supports parsing the output of `xrepo fetch --deps`.
+    # But pulling in the output of `--deps` is problematic because the dependent
+    # libraries maybe using different configs.
+    # For example, glog depends on gflags. But the gflags library pulled in by glog is with
+    # default configs {mt=false,shared=false}, while the user maybe requiring gflags with
+    # configs {mt=true,shared=true}.
+    # It's error-prone so we don't support it for now.
+    #message(STATUS "xrepo DEBUG: json output: ${json_output}")
+    string(JSON len LENGTH ${json_output})
+    math(EXPR len_end "${len} - 1")
+    foreach(idx RANGE 0 ${len_end})
+        # Loop over includedirs.
+        string(JSON includedirs_len ERROR_VARIABLE includedirs_error LENGTH ${json_output} ${idx} includedirs)
+        if("${includedirs_error}" STREQUAL "NOTFOUND")
+            math(EXPR includedirs_end "${includedirs_len} - 1")
+            foreach(includedirs_idx RANGE 0 ${includedirs_end})
+                string(JSON dir GET ${json_output} ${idx} includedirs ${includedirs_idx})
+                # It's difficult to know package name while looping over all packages.
+                # Thus we use list to collect all include and link dirs.
+                list(APPEND includedirs ${dir})
+                #message(STATUS "xrepo DEBUG: includedirs ${idx} ${includedirs_idx} ${dir}")
+            endforeach()
+        endif()
+
+        # Loop over linkdirs.
+        string(JSON linkdirs_len ERROR_VARIABLE linkdirs_error LENGTH ${json_output} ${idx} linkdirs)
+        if("${linkdirs_error}" STREQUAL "NOTFOUND")
+            math(EXPR linkdirs_end "${linkdirs_len} - 1")
+            foreach(linkdirs_idx RANGE 0 ${linkdirs_end})
+                string(JSON dir GET ${json_output} ${idx} linkdirs ${linkdirs_idx})
+                list(APPEND linkdirs ${dir})
+                #message(STATUS "xrepo DEBUG: linkdirs ${idx} ${linkdirs_idx} ${dir}")
+
+                if(IS_DIRECTORY "${dir}/cmake")
+                    file(GLOB cmake_dirs LIST_DIRECTORIES true "${dir}/cmake/*")
+                    foreach(cmakedir ${cmake_dirs})
+                        get_filename_component(pkg "${cmakedir}" NAME)
+                        set(${pkg}_DIR "${cmakedir}" PARENT_SCOPE)
+                        message(STATUS "xrepo: ${pkg}_DIR ${cmakedir}")
+                    endforeach()
+                endif()
+            endforeach()
+        endif()
+    endforeach()
+
+    if(DEFINED includedirs)
+        set(${package_name}_INCLUDE_DIR "${includedirs}" PARENT_SCOPE)
+        message(STATUS "xrepo: ${package_name}_INCLUDE_DIR ${includedirs}")
+    else()
+        message(STATUS "xrepo fetch --json: ${package_name} includedirs not found")
+    endif()
+
+    if(DEFINED linkdirs)
+        set(${package_name}_LINK_DIR "${linkdirs}" PARENT_SCOPE)
+        message(STATUS "xrepo: ${package_name}_LINK_DIR ${linkdirs}")
+    else()
+        message(STATUS "xrepo fetch --json: ${package_name} linkdirs not found")
+    endif()
+endmacro()
+
+macro(_xrepo_fetch_cflags)
+    # Use cflags to get include path. Then we look for lib and cmake dir relative to include path.
+    execute_process(COMMAND ${XREPO_CMD} fetch --cflags ${mode} ${configs} ${package}
+                    OUTPUT_VARIABLE cflags_output
+                    RESULT_VARIABLE exit_code)
+    if(NOT "${exit_code}" STREQUAL "0")
+        message(FATAL_ERROR "xrepo fetch --cflags failed, exit code: ${exit_code}")
+    endif()
+
+    string(REGEX REPLACE "-I(.*)/include.*" "\\1" install_dir ${cflags_output})
+
+    set(${package_name}_INCLUDE_DIR "${install_dir}/include" PARENT_SCOPE)
+    message(STATUS "${package_name}_INCLUDE_DIR: ${install_dir}/include")
+
+    if(EXISTS "${install_dir}/lib")
+        set(${package_name}_LINK_DIR "${install_dir}/lib" PARENT_SCOPE)
+        message(STATUS "${package_name}_LINK_DIR: ${install_dir}/lib")
+    endif()
+    if(EXISTS "${install_dir}/lib/cmake/${package_name}")
+        set(${package_name}_DIR "${install_dir}/lib/cmake/${package_name}" PARENT_SCOPE)
+        message(STATUS "${package_name}_DIR: ${install_dir}/lib/cmake/${package_name}")
+    endif()
+endmacro()
