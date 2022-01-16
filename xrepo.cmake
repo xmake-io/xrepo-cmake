@@ -42,6 +42,7 @@
 #    can be used.
 
 option(XREPO_PACKAGE_DISABLE "Disable Xrepo Packages" OFF)
+option(XREPO_PACKAGE_VERBOSE "Enable verbose output for Xrepo Packages" OFF)
 
 find_program(XMAKE_CMD xmake)
 set(XREPO_CMD ${XMAKE_CMD} lua private.xrepo)
@@ -92,7 +93,9 @@ function(xrepo_package package)
         endif()
     endif()
 
-    if(DEFINED ARG_OUTPUT)
+    if(XREPO_PACKAGE_VERBOSE)
+        set(verbose "-vD")
+    elseif(DEFINED ARG_OUTPUT)
         string(TOLOWER "${ARG_OUTPUT}" _output)
         if(_output STREQUAL "diagnosis")
             set(verbose "-vD")
