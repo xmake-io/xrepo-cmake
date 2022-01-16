@@ -37,7 +37,12 @@
 # 3. If package provides cmake modules under `foo_LINK_DIR/cmake/package`,
 #    set `foo_DIR` to the module directory so that `find_package(foo)`
 #    can be used.
+option(XREPO_PACKAGE_DISABLE "Disable Xrepo Packages" OFF)
 function(xrepo_package package)
+    if (XREPO_PACKAGE_DISABLE)
+        return()
+    endif()
+
     find_program(xrepo_cmd xrepo)
     if(NOT xrepo_cmd)
         message(FATAL_ERROR "xrepo executable not found!")
