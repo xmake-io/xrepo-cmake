@@ -51,24 +51,12 @@ function(_xrepo_detect_json_support)
         return()
     endif()
 
-    # Whether to use `xrepo fetch --json` to get package info.
-    set(XREPO_FETCH_JSON ON)
-
     if(${CMAKE_VERSION} VERSION_LESS "3.19")
         message(WARNING "CMake version < 3.19 has no JSON support, xrepo_package maybe unreliable to setup package variables")
-        set(XREPO_FETCH_JSON OFF)
-    elseif(XREPO_CMD)
-        # Detect if the installed xrepo supports fetch --json option.
-        execute_process(COMMAND ${XREPO_CMD} fetch --json tbox
-                        RESULT_VARIABLE exit_code)
-        if(NOT "${exit_code}" STREQUAL "0")
-            message(WARNING "xrepo fetch --json not supported, xrepo_package maybe unreliable to setup package variables")
-            set(XREPO_FETCH_JSON OFF)
-        endif()
+        set(XREPO_FETCH_JSON OFF PARENT_SCOPE)
     endif()
 
-    message(STATUS "xrepo fetch --json support: ${XREPO_FETCH_JSON}")
-    set(XREPO_FETCH_JSON ${XREPO_FETCH_JSON} PARENT_SCOPE)
+    # Postpone xrepo fetch --json support detection until we have installed one package.
 endfunction()
 
 _xrepo_detect_json_support()
@@ -125,6 +113,18 @@ function(xrepo_package package)
     # Set up variables to use package.
     string(REGEX REPLACE "([^ ]+).*" "\\1" package_name ${package})
 
+    if(NOT DEFINED XREPO_FETCH_JSON)
+        # Detect whether `--json` option is supported.
+        execute_process(COMMAND ${XREPO_CMD} fetch --json ${mode} ${configs} ${package}
+                        RESULT_VARIABLE exit_code)
+        if("${exit_code}" STREQUAL "0")
+            set(XREPO_FETCH_JSON ON)
+        else()
+            set(XREPO_FETCH_JSON OFF)
+        endif()
+        set(XREPO_FETCH_JSON ${XREPO_FETCH_JSON} PARENT_SCOPE)
+    endif()
+
     if(XREPO_FETCH_JSON)
         _xrepo_fetch_json()
     else()
@@ -150,7 +150,6 @@ function(_validate_mode mode)
 endfunction()
 
 macro(_xrepo_fetch_json)
-    # Use cflags to get include path. Then we look for lib and cmake dir relative to include path.
     execute_process(COMMAND ${XREPO_CMD} fetch --json ${mode} ${configs} ${package}
                     OUTPUT_VARIABLE json_output
                     RESULT_VARIABLE exit_code)
