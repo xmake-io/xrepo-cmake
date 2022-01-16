@@ -67,6 +67,10 @@ Example use cases for this project:
 
 ## Usage
 
+### Use package from official repository
+
+Xrepo official repository: [xmake-repo](https://github.com/xmake-io/xmake-repo)
+
 [`xrepo.cmake`](./xrepo.cmake) provides `xrepo_package` function to manage
 packages.
 
@@ -123,6 +127,27 @@ xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
 # provides cmake modules. So we can now call `find_package` to find gflags
 # package.
 find_package(gflags CONFIG COMPONENTS shared)
+```
+
+### Use package from 3rd repository
+
+In addition to installing packages from officially maintained repository,
+Xrepo can also install packages from third-party package managers such as vcpkg/conan/conda/pacman/homebrew/apt/dub/cargo.
+
+For the use of the command line, we can refer to the documentation: [Xrepo command usage](https://xrepo.xmake.io/#/getting_started?id=install-packages-from-third-party-package-manager)
+
+We can also use it directly in cmake to install packages from third-party repositories, just add the repository name as a namespace. e.g. `vcpkg::zlib`, `conan::pcre2`
+
+#### Conan
+
+```cmake
+xrepo_package("conan::gflags/2.2.2")
+```
+
+#### Vcpkg
+
+```cmake
+xrepo_package("vcpkg::gflags")
 ```
 
 ## How does it work?
