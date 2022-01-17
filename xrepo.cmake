@@ -52,12 +52,30 @@ function(_xrepo_detect_json_support)
         return()
     endif()
 
+    # Whether to use `xrepo fetch --json` to get package info.
+    set(XREPO_FETCH_JSON ON)
+
     if(${CMAKE_VERSION} VERSION_LESS "3.19")
-        message(WARNING "CMake version < 3.19 has no JSON support, xrepo_package maybe unreliable to setup package variables")
-        set(XREPO_FETCH_JSON OFF PARENT_SCOPE)
+        message(WARNING "CMake version < 3.19 has no JSON support, "
+                        "xrepo_package maybe unreliable to setup package variables")
+        set(XREPO_FETCH_JSON OFF)
+    elseif(XREPO_CMD)
+        execute_process(COMMAND ${XREPO_CMD} fetch --help
+                        OUTPUT_VARIABLE help_output
+                        RESULT_VARIABLE exit_code)
+        if(NOT "${exit_code}" STREQUAL "0")
+            message(FATAL_ERROR "xrepo fetch --help failed, exit code: ${exit_code}")
+        endif()
+
+        if(NOT "${help_output}" MATCHES "--json")
+            message(WARNING "xrepo fetch does not support --json (please upgrade), "
+                            "xrepo_package maybe unreliable to setup package variables")
+            set(XREPO_FETCH_JSON OFF)
+        endif()
     endif()
 
-    # Postpone xrepo fetch --json support detection until we have installed one package.
+    message(STATUS "xrepo fetch --json support: ${XREPO_FETCH_JSON}")
+    set(XREPO_FETCH_JSON ${XREPO_FETCH_JSON} PARENT_SCOPE)
 endfunction()
 
 _xrepo_detect_json_support()
@@ -116,19 +134,6 @@ function(xrepo_package package)
     # Set up variables to use package.
     string(REGEX REPLACE "([^ ]+).*" "\\1" package_name ${package})
 
-    if(NOT DEFINED XREPO_FETCH_JSON)
-        # Detect whether `--json` option is supported.
-        execute_process(COMMAND ${XREPO_CMD} fetch --json ${mode} ${configs} ${package}
-                        ERROR_QUIET OUTPUT_QUIET
-                        RESULT_VARIABLE exit_code)
-        if("${exit_code}" STREQUAL "0")
-            set(XREPO_FETCH_JSON ON)
-        else()
-            set(XREPO_FETCH_JSON OFF)
-        endif()
-        set(XREPO_FETCH_JSON ${XREPO_FETCH_JSON} PARENT_SCOPE)
-    endif()
-
     if(XREPO_FETCH_JSON)
         _xrepo_fetch_json()
     else()
@@ -148,8 +153,7 @@ endfunction()
 function(_validate_mode mode)
     string(TOLOWER ${mode} _mode)
     if(NOT ((_mode STREQUAL "debug") OR (_mode STREQUAL "release")))
-        message(FATAL_ERROR
-            "xrepo_package invalid MODE: ${mode}, valid values: debug, release")
+        message(FATAL_ERROR "xrepo_package invalid MODE: ${mode}, valid values: debug, release")
     endif()
 endfunction()
 
