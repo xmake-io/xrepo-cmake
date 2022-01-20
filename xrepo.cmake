@@ -110,7 +110,7 @@ function(_install_xmake_program)
     endif()
 endfunction()
 
-find_program(XMAKE_CMD xxx)
+find_program(XMAKE_CMD xmake)
 if(NOT XMAKE_CMD)
     if(WIN32)
         set(XMAKE_BINARY ${CMAKE_BINARY_DIR}/xmake/xmake.exe)
