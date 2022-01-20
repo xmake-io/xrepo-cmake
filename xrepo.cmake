@@ -43,10 +43,89 @@
 
 option(XREPO_PACKAGE_DISABLE "Disable Xrepo Packages" OFF)
 option(XREPO_PACKAGE_VERBOSE "Enable verbose output for Xrepo Packages" OFF)
+option(XREPO_BOOTSTRAP_XMAKE "Bootstrap Xmake automatically" OFF)
 
-find_program(XMAKE_CMD xmake)
+function(_install_xmake_program)
+    set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
+    message(STATUS "xmake not found, Install it to ${XMAKE_BINARY_DIR} automatically!")
+    if(EXISTS "${XMAKE_BINARY_DIR}")
+        file(REMOVE_RECURSE ${XMAKE_BINARY_DIR})
+    endif()
+
+    # Download xmake archive file
+    set(XMAKE_VERSION v2.6.2)
+    if(WIN32)
+        set(XMAKE_ARCHIVE_FILE ${CMAKE_BINARY_DIR}/xmake-${XMAKE_VERSION}.win32.zip)
+        set(XMAKE_ARCHIVE_URL https://github.com/xmake-io/xmake/releases/download/${XMAKE_VERSION}/xmake-${XMAKE_VERSION}.win32.zip)
+    else()
+        set(XMAKE_ARCHIVE_FILE ${CMAKE_BINARY_DIR}/xmake-${XMAKE_VERSION}.zip)
+        set(XMAKE_ARCHIVE_URL https://github.com/xmake-io/xmake/releases/download/${XMAKE_VERSION}/xmake-${XMAKE_VERSION}.zip)
+    endif()
+    if(NOT EXISTS "${XMAKE_ARCHIVE_FILE}")
+        message(STATUS "Downloading xmake from ${XMAKE_ARCHIVE_URL}")
+        file(DOWNLOAD "${XMAKE_ARCHIVE_URL}"
+                      "${XMAKE_ARCHIVE_FILE}"
+                      TLS_VERIFY ON)
+    endif()
+
+    # Extract xmake archive file
+    if(NOT EXISTS "${XMAKE_BINARY_DIR}")
+        message(STATUS "Extracting ${XMAKE_ARCHIVE_FILE}")
+        file(MAKE_DIRECTORY ${XMAKE_BINARY_DIR})
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${XMAKE_ARCHIVE_FILE}
+            WORKING_DIRECTORY ${XMAKE_BINARY_DIR}
+            RESULT_VARIABLE exit_code)
+        if(NOT "${exit_code}" STREQUAL "0")
+            message(FATAL_ERROR "unzip ${XMAKE_ARCHIVE_FILE} failed, exit code: ${exit_code}")
+        endif()
+    endif()
+
+    # Install xmake
+    if(WIN32)
+        set(XMAKE_BINARY ${XMAKE_BINARY_DIR}/xmake.exe)
+        if(EXISTS ${XMAKE_BINARY})
+            set(XMAKE_CMD ${XMAKE_BINARY} PARENT_SCOPE)
+        endif()
+    else()
+        message(STATUS "Building xmake")
+        execute_process(COMMAND make
+            WORKING_DIRECTORY ${XMAKE_BINARY_DIR}
+            RESULT_VARIABLE exit_code)
+        if(NOT "${exit_code}" STREQUAL "0")
+            message(FATAL_ERROR "Build xmake failed, exit code: ${exit_code}")
+        endif()
+
+        message(STATUS "Installing xmake")
+        execute_process(COMMAND make install PREFIX=${XMAKE_BINARY_DIR}/install
+            WORKING_DIRECTORY ${XMAKE_BINARY_DIR}
+            RESULT_VARIABLE exit_code)
+        if(NOT "${exit_code}" STREQUAL "0")
+            message(FATAL_ERROR "Install xmake failed, exit code: ${exit_code}")
+        endif()
+
+        set(XMAKE_BINARY ${XMAKE_BINARY_DIR}/install/bin/xmake)
+        if(EXISTS ${XMAKE_BINARY})
+            set(XMAKE_CMD ${XMAKE_BINARY} PARENT_SCOPE)
+        endif()
+    endif()
+endfunction()
+
+find_program(XMAKE_CMD xxx)
 if(NOT XMAKE_CMD)
-    message(FATAL_ERROR "xmake executable not found!")
+    if(WIN32)
+        set(XMAKE_BINARY ${CMAKE_BINARY_DIR}/xmake/xmake.exe)
+    else()
+        set(XMAKE_BINARY ${CMAKE_BINARY_DIR}/xmake/install/bin/xmake)
+    endif()
+    if(EXISTS ${XMAKE_BINARY})
+        set(XMAKE_CMD ${XMAKE_BINARY})
+    endif()
+endif()
+if(NOT XMAKE_CMD AND XREPO_BOOTSTRAP_XMAKE)
+    _install_xmake_program()
+endif()
+if(NOT XMAKE_CMD)
+    message(FATAL_ERROR "xmake not found, Please install it first from https://xmake.io")
 endif()
 set(XREPO_CMD ${XMAKE_CMD} lua private.xrepo)
 
