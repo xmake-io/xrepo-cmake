@@ -45,6 +45,9 @@ option(XREPO_PACKAGE_DISABLE "Disable Xrepo Packages" OFF)
 option(XREPO_PACKAGE_VERBOSE "Enable verbose output for Xrepo Packages" OFF)
 
 find_program(XMAKE_CMD xmake)
+if(NOT XMAKE_CMD)
+    message(FATAL_ERROR "xmake executable not found!")
+endif()
 set(XREPO_CMD ${XMAKE_CMD} lua private.xrepo)
 
 function(_xrepo_detect_json_support)
@@ -83,10 +86,6 @@ _xrepo_detect_json_support()
 function(xrepo_package package)
     if(XREPO_PACKAGE_DISABLE)
         return()
-    endif()
-
-    if(NOT XMAKE_CMD)
-        message(FATAL_ERROR "xmake executable not found!")
     endif()
 
     set(options DIRECTORY_SCOPE)
