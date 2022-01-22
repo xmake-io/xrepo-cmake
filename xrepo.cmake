@@ -210,17 +210,15 @@ function(xrepo_package package)
         endif()
     endif()
 
+    # Get package_name that will be used as various variables' prefix.
+    _xrepo_package_name(${package})
+
     message(STATUS "xrepo install ${verbose} ${mode} ${configs} '${package}'")
     execute_process(COMMAND ${XREPO_CMD} install --yes ${verbose} ${mode} ${configs} ${package}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
         message(FATAL_ERROR "xrepo install failed, exit code: ${exit_code}")
     endif()
-
-    # Set up variables to use package.
-    # CMake allows almost any text in variable name, so we just avoid space in
-    # package name to make message easier to read.
-    string(REGEX REPLACE "([^ ]+).*" "\\1" package_name ${package})
 
     if(XREPO_FETCH_JSON)
         _xrepo_fetch_json()
@@ -243,6 +241,26 @@ function(_validate_mode mode)
     if(NOT ((_mode STREQUAL "debug") OR (_mode STREQUAL "release")))
         message(FATAL_ERROR "xrepo_package invalid MODE: ${mode}, valid values: debug, release")
     endif()
+endfunction()
+
+function(_xrepo_package_name package)
+    # For find_package(pkg) to work, we need to set variable <pkg>_DIR to the
+    # cmake module directory provided by the package. Thus we need to extract
+    # package name from package specification, which may also contain package
+    # source and version.
+    if(package MATCHES "^conan::.*")
+        string(REGEX REPLACE "conan::([^/]+).*" "\\1" package_name ${package})
+    elseif(package MATCHES "^conda::.*")
+        string(REGEX REPLACE "conda::([^ ]+).*" "\\1" package_name ${package})
+    elseif(package MATCHES "^vcpkg::.*")
+        string(REGEX REPLACE "vcpkg::(.*)" "\\1" package_name ${package})
+    elseif(package MATCHES "^brew::.*")
+        string(REGEX REPLACE "brew::([^/]+).*" "\\1" package_name ${package})
+    else()
+        string(REGEX REPLACE "([^ ]+).*" "\\1" package_name ${package})
+    endif()
+
+    set(package_name ${package_name} PARENT_SCOPE)
 endfunction()
 
 macro(_xrepo_fetch_json)
