@@ -43,7 +43,7 @@
 
 option(XREPO_PACKAGE_DISABLE "Disable Xrepo Packages" OFF)
 option(XREPO_PACKAGE_VERBOSE "Enable verbose output for Xrepo Packages" OFF)
-option(XREPO_BOOTSTRAP_XMAKE "Bootstrap Xmake automatically" OFF)
+option(XREPO_BOOTSTRAP_XMAKE "Bootstrap Xmake automatically" ON)
 
 function(_install_xmake_program)
     set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
