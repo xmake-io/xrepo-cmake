@@ -43,7 +43,7 @@
 
 option(XREPO_PACKAGE_DISABLE "Disable Xrepo Packages" OFF)
 option(XREPO_PACKAGE_VERBOSE "Enable verbose output for Xrepo Packages" OFF)
-option(XREPO_BOOTSTRAP_XMAKE "Bootstrap Xmake automatically" OFF)
+option(XREPO_BOOTSTRAP_XMAKE "Bootstrap Xmake automatically" ON)
 
 function(_install_xmake_program)
     set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
@@ -53,7 +53,7 @@ function(_install_xmake_program)
     endif()
 
     # Download xmake archive file
-    set(XMAKE_VERSION v2.6.2)
+    set(XMAKE_VERSION v2.6.3)
     if(WIN32)
         set(XMAKE_ARCHIVE_FILE ${CMAKE_BINARY_DIR}/xmake-${XMAKE_VERSION}.win32.zip)
         set(XMAKE_ARCHIVE_URL https://github.com/xmake-io/xmake/releases/download/${XMAKE_VERSION}/xmake-${XMAKE_VERSION}.win32.zip)
@@ -82,7 +82,7 @@ function(_install_xmake_program)
 
     # Install xmake
     if(WIN32)
-        set(XMAKE_BINARY ${XMAKE_BINARY_DIR}/xmake.exe)
+        set(XMAKE_BINARY ${XMAKE_BINARY_DIR}/xmake/xmake.exe)
         if(EXISTS ${XMAKE_BINARY})
             set(XMAKE_CMD ${XMAKE_BINARY} PARENT_SCOPE)
         endif()
@@ -118,7 +118,7 @@ macro(_detect_xmake_cmd)
 
     if(NOT XMAKE_CMD)
         if(WIN32)
-            set(XMAKE_BINARY ${CMAKE_BINARY_DIR}/xmake/xmake.exe)
+            set(XMAKE_BINARY ${CMAKE_BINARY_DIR}/xmake/xmake/xmake.exe)
         else()
             set(XMAKE_BINARY ${CMAKE_BINARY_DIR}/xmake/install/bin/xmake)
         endif()
