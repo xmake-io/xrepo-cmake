@@ -129,6 +129,19 @@ xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
 find_package(gflags CONFIG COMPONENTS shared)
 ```
 
+### Options and variables for `xrepo.cmake`
+
+Following options can be speicified with `cmake -D<key>=<value>`.
+
+- `XMAKE_CMD`: string, defaults to empty string
+  - Specify path to `xmake` command. Use this option if `xmake` is not installed in standard location and can't be detected automatically.
+- `XREPO_PACKAGE_VERBOSE`: `[ON|OFF]`
+  - Enable verbose output for Xrepo Packages.
+- `XREPO_BOOTSTRAP_XMAKE`: `[ON|OFF]`
+  - If `ON`, `xrepo.cmake` will install `xmake` if it is not found.
+- `XREPO_PACKAGE_DISABLE`: `[ON|OFF]`
+  - Set this to `ON` to disable `xrepo_package` function.
+
 ### Use package from 3rd repository
 
 In addition to installing packages from officially maintained repository,
@@ -176,7 +189,7 @@ understand how `xrepo.cmake` works and how to specify some of the options in
 
 ### Xrepo workflow
 
-Assume [Xmake](https://github.com/xmake-io/xmake/) is installed.
+Assmuing [Xmake](https://github.com/xmake-io/xmake/) is installed.
 
 Suppose we want to use `gflags` packages.
 
