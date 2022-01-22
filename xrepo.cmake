@@ -82,7 +82,7 @@ function(_install_xmake_program)
 
     # Install xmake
     if(WIN32)
-        set(XMAKE_BINARY ${XMAKE_BINARY_DIR}/xmake.exe)
+        set(XMAKE_BINARY ${XMAKE_BINARY_DIR}/xmake/xmake.exe)
         if(EXISTS ${XMAKE_BINARY})
             set(XMAKE_CMD ${XMAKE_BINARY} PARENT_SCOPE)
         endif()
@@ -118,7 +118,7 @@ macro(_detect_xmake_cmd)
 
     if(NOT XMAKE_CMD)
         if(WIN32)
-            set(XMAKE_BINARY ${CMAKE_BINARY_DIR}/xmake/xmake.exe)
+            set(XMAKE_BINARY ${CMAKE_BINARY_DIR}/xmake/xmake/xmake.exe)
         else()
             set(XMAKE_BINARY ${CMAKE_BINARY_DIR}/xmake/install/bin/xmake)
         endif()
