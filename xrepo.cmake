@@ -44,7 +44,6 @@
 option(XREPO_PACKAGE_DISABLE "Disable Xrepo Packages" OFF)
 option(XREPO_PACKAGE_VERBOSE "Enable verbose output for Xrepo Packages" OFF)
 option(XREPO_BOOTSTRAP_XMAKE "Bootstrap Xmake automatically" OFF)
-set(XMAKE_CMD "" CACHE STRING "Path to xmake command")
 
 function(_install_xmake_program)
     set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
@@ -113,6 +112,7 @@ endfunction()
 
 macro(_detect_xmake_cmd)
     if(NOT XMAKE_CMD)
+        # Note: if XMAKE_CMD is already defined, find_program does not search.
         find_program(XMAKE_CMD xmake)
     endif()
 
@@ -133,6 +133,7 @@ macro(_detect_xmake_cmd)
         message(FATAL_ERROR "xmake not found, Please install it first from https://xmake.io")
     endif()
 
+    message(STATUS "xmake command: ${XMAKE_CMD}")
     set(XREPO_CMD ${XMAKE_CMD} lua private.xrepo)
 endmacro()
 
