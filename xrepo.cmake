@@ -113,6 +113,8 @@ endfunction()
 macro(_detect_xmake_cmd)
     if(NOT XMAKE_CMD)
         # Note: if XMAKE_CMD is already defined, find_program does not search.
+        # find_program makes XMAKE_CMD a cached variable. So find_program
+        # searches only once for each cmake build directory.
         find_program(XMAKE_CMD xmake)
     endif()
 
@@ -138,13 +140,17 @@ macro(_detect_xmake_cmd)
 endmacro()
 
 function(_xrepo_detect_json_support)
+    if(DEFINED XREPO_FETCH_JSON)
+        return()
+    endif()
+
     # Whether to use `xrepo fetch --json` to get package info.
-    set(XREPO_FETCH_JSON ON)
+    set(use_fetch_json ON)
 
     if(${CMAKE_VERSION} VERSION_LESS "3.19")
         message(WARNING "CMake version < 3.19 has no JSON support, "
                         "xrepo_package maybe unreliable to setup package variables")
-        set(XREPO_FETCH_JSON OFF)
+        set(use_fetch_json OFF)
     elseif(XREPO_CMD)
         execute_process(COMMAND ${XREPO_CMD} fetch --help
                         OUTPUT_VARIABLE help_output
@@ -156,18 +162,18 @@ function(_xrepo_detect_json_support)
         if(NOT "${help_output}" MATCHES "--json")
             message(WARNING "xrepo fetch does not support --json (please upgrade), "
                             "xrepo_package maybe unreliable to setup package variables")
-            set(XREPO_FETCH_JSON OFF)
+            set(use_fetch_json OFF)
         endif()
     endif()
 
-    message(STATUS "xrepo fetch --json support: ${XREPO_FETCH_JSON}")
-    set(XREPO_FETCH_JSON ${XREPO_FETCH_JSON} PARENT_SCOPE)
+    set(XREPO_FETCH_JSON ${use_fetch_json} CACHE BOOL "Use xrepo JSON output" FORCE)
 endfunction()
 
 if(NOT XREPO_PACKAGE_DISABLE)
     # Setup for xmake.
     _detect_xmake_cmd()
     _xrepo_detect_json_support()
+    message(STATUS "xrepo fetch --json: ${XREPO_FETCH_JSON}")
 endif()
 
 function(xrepo_package package)
@@ -213,6 +219,24 @@ function(xrepo_package package)
     # Get package_name that will be used as various variables' prefix.
     _xrepo_package_name(${package})
 
+    # To speedup cmake re-configure, if xrepo command args is the same as the
+    # cached value, load related variables from cache to avoid executing xrepo
+    # command again.
+    set(_xrepo_cmdargs_${package_name} "${XREPO_CMD} ${verbose} ${mode} ${configs} ${package}")
+    if("${_cache_xrepo_cmdargs_${package_name}}" STREQUAL "${_xrepo_cmdargs_${package_name}}")
+        message(STATUS "xrepo: ${package} already installed, using cached variables")
+
+        foreach(var ${_cache_xrepo_vars_${package_name}})
+            message(STATUS "xrepo: ${var} ${${var}}")
+        endforeach()
+
+        if(ARG_DIRECTORY_SCOPE)
+            _xrepo_directory_scope(${package_name})
+        endif()
+
+        return()
+    endif()
+
     message(STATUS "xrepo install ${verbose} ${mode} ${configs} '${package}'")
     execute_process(COMMAND ${XREPO_CMD} install --yes ${verbose} ${mode} ${configs} ${package}
                     RESULT_VARIABLE exit_code)
@@ -227,12 +251,21 @@ function(xrepo_package package)
     endif()
 
     if(ARG_DIRECTORY_SCOPE)
+        _xrepo_directory_scope(${package_name})
+    endif()
+
+    # Store xrepo command and arguments for furture comparison.
+    set(_cache_xrepo_cmdargs_${package_name} ${_xrepo_cmdargs_${package_name}} CACHE INTERNAL "" FORCE)
+endfunction()
+
+function(_xrepo_directory_scope package_name)
+    if(DEFINED ${package_name}_INCLUDE_DIR)
         message(STATUS "xrepo: directory scope include_directories(${${package_name}_INCLUDE_DIR})")
         include_directories(${${package_name}_INCLUDE_DIR})
-        if(DEFINED ${package_name}_LINK_DIR)
-            message(STATUS "xrepo: directory scope link_directories(${${package_name}_LINK_DIR})")
-            link_directories(${${package_name}_LINK_DIR})
-        endif()
+    endif()
+    if(DEFINED ${package_name}_LINK_DIR)
+        message(STATUS "xrepo: directory scope link_directories(${${package_name}_LINK_DIR})")
+        link_directories(${${package_name}_LINK_DIR})
     endif()
 endfunction()
 
@@ -309,8 +342,8 @@ macro(_xrepo_fetch_json)
                     file(GLOB cmake_dirs LIST_DIRECTORIES true "${dir}/cmake/*")
                     foreach(cmakedir ${cmake_dirs})
                         get_filename_component(pkg "${cmakedir}" NAME)
-                        set(${pkg}_DIR "${cmakedir}")
-                        set(${pkg}_DIR "${cmakedir}" PARENT_SCOPE)
+                        set(${pkg}_DIR "${cmakedir}" CACHE INTERNAL "" FORCE)
+                        list(APPEND xrepo_vars_${package_name} ${pkg}_DIR)
                         message(STATUS "xrepo: ${pkg}_DIR ${${pkg}_DIR}")
                     endforeach()
                 endif()
@@ -319,22 +352,22 @@ macro(_xrepo_fetch_json)
     endforeach()
 
     if(DEFINED includedirs)
-        # We are inside a macro called in function. We need to make variables
-        # available to both the function and parent scope, thus call set twice.
-        set(${package_name}_INCLUDE_DIR "${includedirs}")
-        set(${package_name}_INCLUDE_DIR "${includedirs}" PARENT_SCOPE)
+        set(${package_name}_INCLUDE_DIR "${includedirs}" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_INCLUDE_DIR)
         message(STATUS "xrepo: ${package_name}_INCLUDE_DIR ${${package_name}_INCLUDE_DIR}")
     else()
         message(STATUS "xrepo fetch --json: ${package_name} includedirs not found")
     endif()
 
     if(DEFINED linkdirs)
-        set(${package_name}_LINK_DIR "${linkdirs}")
-        set(${package_name}_LINK_DIR "${linkdirs}" PARENT_SCOPE)
+        set(${package_name}_LINK_DIR "${linkdirs}" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_DIR)
         message(STATUS "xrepo: ${package_name}_LINK_DIR ${${package_name}_LINK_DIR}")
     else()
         message(STATUS "xrepo fetch --json: ${package_name} linkdirs not found")
     endif()
+
+    set(_cache_xrepo_vars_${package_name} "${xrepo_vars_${package_name}}" CACHE INTERNAL "" FORCE)
 endmacro()
 
 macro(_xrepo_fetch_cflags)
@@ -348,18 +381,20 @@ macro(_xrepo_fetch_cflags)
 
     string(REGEX REPLACE "-I(.*)/include.*" "\\1" install_dir ${cflags_output})
 
-    set(${package_name}_INCLUDE_DIR "${install_dir}/include")
-    set(${package_name}_INCLUDE_DIR "${install_dir}/include" PARENT_SCOPE)
+    set(${package_name}_INCLUDE_DIR "${install_dir}/include" CACHE INTERNAL "")
+    list(APPEND xrepo_vars_${package_name} ${package_name}_INCLUDE_DIR)
     message(STATUS "xrepo: ${package_name}_INCLUDE_DIR ${${package_name}_INCLUDE_DIR}")
 
     if(EXISTS "${install_dir}/lib")
-        set(${package_name}_LINK_DIR "${install_dir}/lib")
-        set(${package_name}_LINK_DIR "${install_dir}/lib" PARENT_SCOPE)
+        set(${package_name}_LINK_DIR "${install_dir}/lib" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_DIR)
         message(STATUS "xrepo: ${package_name}_LINK_DIR ${${package_name}_LINK_DIR}")
     endif()
     if(EXISTS "${install_dir}/lib/cmake/${package_name}")
-        set(${package_name}_DIR "${install_dir}/lib/cmake/${package_name}")
-        set(${package_name}_DIR "${install_dir}/lib/cmake/${package_name}" PARENT_SCOPE)
+        set(${package_name}_DIR "${install_dir}/lib/cmake/${package_name}" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_DIR)
         message(STATUS "xrepo: ${package_name}_DIR ${${package_name}_DIR}")
     endif()
+
+    set(_cache_xrepo_vars_${package_name} "${xrepo_vars_${package_name}}" CACHE INTERNAL "" FORCE)
 endmacro()

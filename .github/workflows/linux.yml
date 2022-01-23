@@ -30,4 +30,5 @@ jobs:
         run: |
           cmake example
           make
-
+          touch example/CMakeLists.txt
+          make
