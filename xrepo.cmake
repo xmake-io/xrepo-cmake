@@ -255,7 +255,7 @@ function(xrepo_package package)
     endif()
 
     # Store xrepo command and arguments for furture comparison.
-    set(_cache_xrepo_cmdargs_${package_name} ${_xrepo_cmdargs_${package_name}} CACHE INTERNAL "" FORCE)
+    set(_cache_xrepo_cmdargs_${package_name} "${_xrepo_cmdargs_${package_name}}" CACHE INTERNAL "")
 endfunction()
 
 function(_xrepo_directory_scope package_name)
@@ -342,7 +342,7 @@ macro(_xrepo_fetch_json)
                     file(GLOB cmake_dirs LIST_DIRECTORIES true "${dir}/cmake/*")
                     foreach(cmakedir ${cmake_dirs})
                         get_filename_component(pkg "${cmakedir}" NAME)
-                        set(${pkg}_DIR "${cmakedir}" CACHE INTERNAL "" FORCE)
+                        set(${pkg}_DIR "${cmakedir}" CACHE INTERNAL "")
                         list(APPEND xrepo_vars_${package_name} ${pkg}_DIR)
                         message(STATUS "xrepo: ${pkg}_DIR ${${pkg}_DIR}")
                     endforeach()
@@ -367,7 +367,7 @@ macro(_xrepo_fetch_json)
         message(STATUS "xrepo fetch --json: ${package_name} linkdirs not found")
     endif()
 
-    set(_cache_xrepo_vars_${package_name} "${xrepo_vars_${package_name}}" CACHE INTERNAL "" FORCE)
+    set(_cache_xrepo_vars_${package_name} "${xrepo_vars_${package_name}}" CACHE INTERNAL "")
 endmacro()
 
 macro(_xrepo_fetch_cflags)
@@ -396,5 +396,5 @@ macro(_xrepo_fetch_cflags)
         message(STATUS "xrepo: ${package_name}_DIR ${${package_name}_DIR}")
     endif()
 
-    set(_cache_xrepo_vars_${package_name} "${xrepo_vars_${package_name}}" CACHE INTERNAL "" FORCE)
+    set(_cache_xrepo_vars_${package_name} "${xrepo_vars_${package_name}}" CACHE INTERNAL "")
 endmacro()
