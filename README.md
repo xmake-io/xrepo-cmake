@@ -131,16 +131,33 @@ find_package(gflags CONFIG COMPONENTS shared)
 
 ### Options and variables for `xrepo.cmake`
 
-Following options can be speicified with `cmake -D<key>=<value>`.
+Following options can be speicified with `cmake -D<var>=<value>`.
+Or use `set(var value)` in `CMakeLists.txt`.
 
 - `XMAKE_CMD`: string, defaults to empty string
-  - Specify path to `xmake` command. Use this option if `xmake` is not installed in standard location and can't be detected automatically.
+  - Specify path to `xmake` command. Use this option if `xmake` is not installed
+    in standard location and can't be detected automatically.
 - `XREPO_PACKAGE_VERBOSE`: `[ON|OFF]`
   - Enable verbose output for Xrepo Packages.
 - `XREPO_BOOTSTRAP_XMAKE`: `[ON|OFF]`
   - If `ON`, `xrepo.cmake` will install `xmake` if it is not found.
 - `XREPO_PACKAGE_DISABLE`: `[ON|OFF]`
   - Set this to `ON` to disable `xrepo_package` function.
+  - If setting this variable in `CMakeLists.txt`, please set it before including
+    `xrepo.cmake`.
+
+### Switching compiler and cross compilation
+
+Following variables controll cross compilation. Note: to specify a different compiler other than
+the default one on system, platform must be set to "cross".
+
+- `XREPO_TOOLCHAIN`: string, defaults to empty string
+  - Specify toolchain name. Run `xmake show -l toolchains` to see available toolchains.
+- `XREPO_PLATFORM`: string, defaults to empty string
+  - Specify platform name. If `XREPO_TOOLCHAIN` is specified and this is not,
+    `XREPO_PLATFORM` will be set to `cross`.
+- `XREPO_ARCH`: string, defaults to empty string
+  - Specify architecture name.
 
 ### Use package from 3rd repository
 
@@ -225,7 +242,9 @@ Suppose we want to use multi-threaded gflags shared library. We can install the 
 xrepo install --mode=release --configs='mt=true,shared=true' 'gflags 2.2.2'
 ```
 
-Only the first call to the above command will compile and install the package. So `xrepo_package` always calls the above command to ensure the package is installed.
+Only the first call to the above command will compile and install the package.
+To speed up cmake configuration, `xrepo` command will only be executed when the
+package is not installed or `xrepo_package` parameters have changed.
 
 After package installation, because we are using CMake instead of Xmake, we have
 to get package installation information by ourself. `xrepo fetch` command does
