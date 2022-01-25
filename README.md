@@ -96,8 +96,8 @@ After calling `xrepo_package(foo)`, there are two ways to use `foo` package:
   - If `DIRECTORY_SCOPE` is specified, `xrepo_package` will run following code
     (so that user only need to specify lib name in `target_link_libraries`)
   ```cmake
-    include_directories(foo_INCLUDE_DIR)
-    link_directories(foo_LINK_DIR)
+    include_directories(${foo_INCLUDE_DIR})
+    link_directories(${foo_LINK_DIR})
   ```
 
 Here's an example `CMakeLists.txt` that uses `gflags` package version 2.2.2
@@ -158,6 +158,24 @@ the default one on system, platform must be set to "cross".
     `XREPO_PLATFORM` will be set to `cross`.
 - `XREPO_ARCH`: string, defaults to empty string
   - Specify architecture name.
+- `XREPO_XMAKEFILE`: string, defaults to empty string
+  - Specify Xmake script file of Xrepo package.
+
+### Add custom package and toolchain
+
+```cmake
+set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
+xrepo_package("myzlib"
+    OUTPUT diagnosis
+    DIRECTORY_SCOPE)
+```
+
+packages/xmake.lua
+
+```lua
+package("myzlib")
+    -- ...
+```
 
 ### Use package from 3rd repository
 
