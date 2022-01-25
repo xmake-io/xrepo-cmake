@@ -187,7 +187,7 @@ function(xrepo_package package)
     endif()
 
     set(options DIRECTORY_SCOPE)
-    set(one_value_args CONFIGS MODE OUTPUT)
+    set(one_value_args CONFIGS MODE OUTPUT ALIAS)
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "" ${ARGN})
 
     # Construct options to xrepo install and fetch command.
@@ -241,7 +241,11 @@ function(xrepo_package package)
     endif()
 
     # Get package_name that will be used as various variables' prefix.
-    _xrepo_package_name(${package})
+    if(DEFINED ARG_ALIAS)
+    	_xrepo_package_name(${ARG_ALIAS})
+	else()
+    	_xrepo_package_name(${package})
+	endif()
 
     # To speedup cmake re-configure, if xrepo command args is the same as the
     # cached value, load related variables from cache to avoid executing xrepo
@@ -280,6 +284,27 @@ function(xrepo_package package)
 
     # Store xrepo command and arguments for furture comparison.
     set(_cache_xrepo_cmdargs_${package_name} "${_xrepo_cmdargs_${package_name}}" CACHE INTERNAL "")
+endfunction()
+
+function(xrepo_target_packages target)
+    if(XREPO_PACKAGE_DISABLE)
+        return()
+    endif()
+
+    foreach(package_name IN LISTS ARGN)
+		if(DEFINED ${package_name}_INCLUDE_DIR)
+        	message(STATUS "xrepo: target_include_directories(${target} PRIVATE ${${package_name}_INCLUDE_DIR})")
+			target_include_directories(${target} PRIVATE ${${package_name}_INCLUDE_DIR})
+		endif()
+		if(DEFINED ${package_name}_LINK_DIR)
+        	message(STATUS "xrepo: target_link_directories(${target} PRIVATE ${${package_name}_LINK_DIR})")
+			target_link_directories(${target} PRIVATE ${${package_name}_LINK_DIR})
+		endif()
+		if(DEFINED ${package_name}_LINK_LIBRARIES)
+        	message(STATUS "xrepo: target_link_libraries(${target} PRIVATE ${${package_name}_LINK_LIBRARIES})")
+			target_link_libraries(${target} PRIVATE ${${package_name}_LINK_LIBRARIES})
+		endif()
+  	endforeach()
 endfunction()
 
 function(_xrepo_directory_scope package_name)
@@ -373,6 +398,17 @@ macro(_xrepo_fetch_json)
                 endif()
             endforeach()
         endif()
+
+        # Loop over links.
+        string(JSON links_len ERROR_VARIABLE links_error LENGTH ${json_output} ${idx} links)
+        if("${links_error}" STREQUAL "NOTFOUND")
+            math(EXPR links_end "${links_len} - 1")
+            foreach(links_idx RANGE 0 ${links_end})
+                string(JSON dir GET ${json_output} ${idx} links ${links_idx})
+                list(APPEND links ${dir})
+                #message(STATUS "xrepo DEBUG: links ${idx} ${links_idx} ${dir}")
+            endforeach()
+        endif()
     endforeach()
 
     if(DEFINED includedirs)
@@ -389,6 +425,14 @@ macro(_xrepo_fetch_json)
         message(STATUS "xrepo: ${package_name}_LINK_DIR ${${package_name}_LINK_DIR}")
     else()
         message(STATUS "xrepo fetch --json: ${package_name} linkdirs not found")
+    endif()
+
+    if(DEFINED links)
+        set(${package_name}_LINK_LIBRARIES "${links}" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_LIBRARIES)
+        message(STATUS "xrepo: ${package_name}_LINK_LIBRARIES ${${package_name}_LINK_LIBRARIES}")
+    else()
+        message(STATUS "xrepo fetch --json: ${package_name} links not found")
     endif()
 
     set(_cache_xrepo_vars_${package_name} "${xrepo_vars_${package_name}}" CACHE INTERNAL "")

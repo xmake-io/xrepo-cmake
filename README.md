@@ -67,9 +67,9 @@ Example use cases for this project:
 
 ## Usage
 
-### Use package from official repository
+### Apis
 
-Xrepo official repository: [xmake-repo](https://github.com/xmake-io/xmake-repo)
+#### xrepo_package
 
 [`xrepo.cmake`](./xrepo.cmake) provides `xrepo_package` function to manage
 packages.
@@ -79,6 +79,7 @@ xrepo_package(
     "foo 1.2.3"
     [CONFIGS feature1=true,feature2=false]
     [MODE debug|release]
+	[ALIAS aliasname]
     [OUTPUT verbose|diagnosis|quiet]
     [DIRECTORY_SCOPE]
 )
@@ -100,8 +101,25 @@ After calling `xrepo_package(foo)`, there are two ways to use `foo` package:
     link_directories(${foo_LINK_DIR})
   ```
 
+#### xrepo_target_packages
+
+Add package includedirs and links/linkdirs to the given target.
+
+```cmake
+xrepo_target_packages(
+	target
+    package1 package2 ...
+)
+```
+
+### Use package from official repository
+
+Xrepo official repository: [xmake-repo](https://github.com/xmake-io/xmake-repo)
+
 Here's an example `CMakeLists.txt` that uses `gflags` package version 2.2.2
 managed by Xrepo.
+
+#### Integrate xrepo.cmake
 
 ```cmake
 cmake_minimum_required(VERSION 3.13.0)
@@ -119,15 +137,58 @@ endif()
 
 # Include xrepo.cmake so we can use xrepo_package function.
 include(${CMAKE_BINARY_DIR}/xrepo.cmake)
+```
 
-# Call `xrepo_package` function to use gflags 2.2.2 with specific configs.
+#### Add common packages
+
+```cmake
+xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
+
+add_executable(example-bin "")
+target_sources(example-bin PRIVATE
+    src/main.cpp
+)
+xrepo_target_packages(example-bin gflags)
+```
+
+#### Add packages with cmake modules
+
+```cmake
 xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
 
 # `xrepo_package` sets `gflags_DIR` variable in parent scope because gflags
 # provides cmake modules. So we can now call `find_package` to find gflags
 # package.
 find_package(gflags CONFIG COMPONENTS shared)
+
+add_executable(example-bin "")
+target_sources(example-bin PRIVATE
+    src/main.cpp
+)
+target_link_libraries(example-bin gflags)
 ```
+
+#### Add custom packages
+
+```cmake
+set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
+xrepo_package("myzlib" OUTPUT diagnosis)
+
+add_executable(example-bin "")
+target_sources(example-bin PRIVATE
+    src/main.cpp
+)
+xrepo_target_packages(example-bin myzlib)
+```
+
+Define myzlib package in packages/xmake.lua
+
+```lua
+package("myzlib")
+    -- ...
+```
+
+We can write a custom package in xmake.lua, please refer [Define Xrepo package](https://xmake.io/#/package/remote_package?id=package-description).
 
 ### Options and variables for `xrepo.cmake`
 
@@ -160,22 +221,6 @@ the default one on system, platform must be set to "cross".
   - Specify architecture name.
 - `XREPO_XMAKEFILE`: string, defaults to empty string
   - Specify Xmake script file of Xrepo package.
-
-### Add custom package and toolchain
-
-```cmake
-set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
-xrepo_package("myzlib"
-    OUTPUT diagnosis
-    DIRECTORY_SCOPE)
-```
-
-packages/xmake.lua
-
-```lua
-package("myzlib")
-    -- ...
-```
 
 ### Use package from 3rd repository
 
