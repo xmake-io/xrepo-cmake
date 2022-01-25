@@ -273,7 +273,7 @@ function(xrepo_package package)
     endif()
 
     if(XREPO_FETCH_JSON)
-        _xrepo_fetch_cflags()
+        _xrepo_fetch_json()
     else()
         _xrepo_fetch_cflags()
     endif()
