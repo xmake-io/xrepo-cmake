@@ -22,7 +22,7 @@ jobs:
 
       - name: Tests
         run: |
-          cmake example
+          cmake -DXREPO_PACKAGE_VERBOSE=ON example
           make
           touch example/CMakeLists.txt
           make

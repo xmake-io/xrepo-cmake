@@ -172,7 +172,7 @@ target_link_libraries(example-bin gflags)
 
 ```cmake
 set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
-xrepo_package("myzlib" OUTPUT diagnosis)
+xrepo_package("myzlib")
 
 add_executable(example-bin "")
 target_sources(example-bin PRIVATE
