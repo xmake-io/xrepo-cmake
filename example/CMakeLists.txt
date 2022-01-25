@@ -32,11 +32,6 @@ xrepo_package("gflags 2.2.2"
 # package.
 find_package(gflags CONFIG COMPONENTS shared)
 
-# Add custom package with directory scope
-include_directories(${myzib_INCLUDE_DIR})
-link_directories(${myzlib_LINK_DIR})
-# TODO librarie ..
-
 # Define target. We run cmake in example parent directory, thus we can't use
 # example as target name.
 add_executable(example-bin "")
