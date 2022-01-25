@@ -1,43 +1,43 @@
 <div align="center">
   <a href="https://xrepo.xmake.io">
-	<img width="160" heigth="160" src="https://tboox.org/static/img/xmake/logo256c.png">
+    <img width="160" heigth="160" src="https://tboox.org/static/img/xmake/logo256c.png">
   </a>
 
   <h1>xrepo-cmake</h1>
 
   <div>
-	<a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3AWindows">
-	  <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/Windows/main.svg?style=flat-square&logo=windows" alt="github-ci" />
-	</a>
-	<a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3ALinux">
-	  <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/Linux/main.svg?style=flat-square&logo=linux" alt="github-ci" />
-	</a>
-	<a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3AmacOS">
-	  <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/macOS/main.svg?style=flat-square&logo=apple" alt="github-ci" />
-	</a>
+    <a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3AWindows">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/Windows/main.svg?style=flat-square&logo=windows" alt="github-ci" />
+    </a>
+    <a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3ALinux">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/Linux/main.svg?style=flat-square&logo=linux" alt="github-ci" />
+    </a>
+    <a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3AmacOS">
+      <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/macOS/main.svg?style=flat-square&logo=apple" alt="github-ci" />
+    </a>
   </div>
   <div>
-	<a href="https://github.com/xmake-io/xmake/blob/main/LICENSE.md">
-	  <img src="https://img.shields.io/github/license/xmake-io/xmake.svg?colorB=f48041&style=flat-square" alt="license" />
-	</a>
-	<a href="https://www.reddit.com/r/xmake/">
-	  <img src="https://img.shields.io/badge/chat-on%20reddit-ff3f34.svg?style=flat-square" alt="Reddit" />
-	</a>
-	<a href="https://gitter.im/xmake-io/xmake?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
-	  <img src="https://img.shields.io/gitter/room/xmake-io/xmake.svg?style=flat-square&colorB=96c312" alt="Gitter" />
-	</a>
-	<a href="https://t.me/tbooxorg">
-	  <img src="https://img.shields.io/badge/chat-on%20telegram-blue.svg?style=flat-square" alt="Telegram" />
-	</a>
-	<a href="https://jq.qq.com/?_wv=1027&k=5hpwWFv">
-	  <img src="https://img.shields.io/badge/chat-on%20QQ-ff69b4.svg?style=flat-square" alt="QQ" />
-	</a>
-	<a href="https://discord.gg/xmake">
-	  <img src="https://img.shields.io/badge/chat-on%20discord-7289da.svg?style=flat-square" alt="Discord" />
-	</a>
-	<a href="https://xmake.io/#/sponsor">
-	  <img src="https://img.shields.io/badge/donate-us-orange.svg?style=flat-square" alt="Donate" />
-	</a>
+    <a href="https://github.com/xmake-io/xmake/blob/main/LICENSE.md">
+      <img src="https://img.shields.io/github/license/xmake-io/xmake.svg?colorB=f48041&style=flat-square" alt="license" />
+    </a>
+    <a href="https://www.reddit.com/r/xmake/">
+      <img src="https://img.shields.io/badge/chat-on%20reddit-ff3f34.svg?style=flat-square" alt="Reddit" />
+    </a>
+    <a href="https://gitter.im/xmake-io/xmake?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
+      <img src="https://img.shields.io/gitter/room/xmake-io/xmake.svg?style=flat-square&colorB=96c312" alt="Gitter" />
+    </a>
+    <a href="https://t.me/tbooxorg">
+      <img src="https://img.shields.io/badge/chat-on%20telegram-blue.svg?style=flat-square" alt="Telegram" />
+    </a>
+    <a href="https://jq.qq.com/?_wv=1027&k=5hpwWFv">
+      <img src="https://img.shields.io/badge/chat-on%20QQ-ff69b4.svg?style=flat-square" alt="QQ" />
+    </a>
+    <a href="https://discord.gg/xmake">
+      <img src="https://img.shields.io/badge/chat-on%20discord-7289da.svg?style=flat-square" alt="Discord" />
+    </a>
+    <a href="https://xmake.io/#/sponsor">
+      <img src="https://img.shields.io/badge/donate-us-orange.svg?style=flat-square" alt="Donate" />
+    </a>
   </div>
 
   <b>CMake wrapper for Xrepo C and C++ package manager.</b><br/>
@@ -76,12 +76,12 @@ packages.
 
 ```cmake
 xrepo_package(
-	"foo 1.2.3"
-	[CONFIGS feature1=true,feature2=false]
-	[MODE debug|release]
-	[ALIAS aliasname]
-	[OUTPUT verbose|diagnosis|quiet]
-	[DIRECTORY_SCOPE]
+    "foo 1.2.3"
+    [CONFIGS feature1=true,feature2=false]
+    [MODE debug|release]
+    [ALIAS aliasname]
+    [OUTPUT verbose|diagnosis|quiet]
+    [DIRECTORY_SCOPE]
 )
 ```
 
@@ -95,10 +95,10 @@ After calling `xrepo_package(foo)`, there are two ways to use `foo` package:
   `foo_LINK_DIR` variables will be set to the package include and library paths.
   Use these variables to setup include and library paths in your CMake code.
   - If `DIRECTORY_SCOPE` is specified, `xrepo_package` will run following code
-	(so that user only need to specify lib name in `target_link_libraries`)
+    (so that user only need to specify lib name in `target_link_libraries`)
   ```cmake
-	include_directories(${foo_INCLUDE_DIR})
-	link_directories(${foo_LINK_DIR})
+    include_directories(${foo_INCLUDE_DIR})
+    link_directories(${foo_LINK_DIR})
   ```
 
 #### xrepo_target_packages
@@ -107,8 +107,8 @@ Add package includedirs and links/linkdirs to the given target.
 
 ```cmake
 xrepo_target_packages(
-	target
-	package1 package2 ...
+    target
+    package1 package2 ...
 )
 ```
 
@@ -128,11 +128,11 @@ project(foo)
 
 # Download xrepo.cmake if not exists in build directory.
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/xrepo.cmake")
-	message(STATUS "Downloading xrepo.cmake from https://github.com/xmake-io/xrepo-cmake/")
-	# mirror https://cdn.jsdelivr.net/gh/xmake-io/xrepo-cmake@main/xrepo.cmake
-	file(DOWNLOAD "https://raw.githubusercontent.com/xmake-io/xrepo-cmake/main/xrepo.cmake"
-				  "${CMAKE_BINARY_DIR}/xrepo.cmake"
-				  TLS_VERIFY ON)
+    message(STATUS "Downloading xrepo.cmake from https://github.com/xmake-io/xrepo-cmake/")
+    # mirror https://cdn.jsdelivr.net/gh/xmake-io/xrepo-cmake@main/xrepo.cmake
+    file(DOWNLOAD "https://raw.githubusercontent.com/xmake-io/xrepo-cmake/main/xrepo.cmake"
+                  "${CMAKE_BINARY_DIR}/xrepo.cmake"
+                  TLS_VERIFY ON)
 endif()
 
 # Include xrepo.cmake so we can use xrepo_package function.
@@ -146,7 +146,7 @@ xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
 
 add_executable(example-bin "")
 target_sources(example-bin PRIVATE
-	src/main.cpp
+    src/main.cpp
 )
 xrepo_target_packages(example-bin gflags)
 ```
@@ -163,7 +163,7 @@ find_package(gflags CONFIG COMPONENTS shared)
 
 add_executable(example-bin "")
 target_sources(example-bin PRIVATE
-	src/main.cpp
+    src/main.cpp
 )
 target_link_libraries(example-bin gflags)
 ```
@@ -176,7 +176,7 @@ xrepo_package("myzlib" OUTPUT diagnosis)
 
 add_executable(example-bin "")
 target_sources(example-bin PRIVATE
-	src/main.cpp
+    src/main.cpp
 )
 xrepo_target_packages(example-bin myzlib)
 ```
@@ -185,7 +185,7 @@ Define myzlib package in packages/xmake.lua
 
 ```lua
 package("myzlib")
-	-- ...
+    -- ...
 ```
 
 We can write a custom package in xmake.lua, please refer [Define Xrepo package](https://xmake.io/#/package/remote_package?id=package-description).
@@ -197,7 +197,7 @@ Or use `set(var value)` in `CMakeLists.txt`.
 
 - `XMAKE_CMD`: string, defaults to empty string
   - Specify path to `xmake` command. Use this option if `xmake` is not installed
-	in standard location and can't be detected automatically.
+    in standard location and can't be detected automatically.
 - `XREPO_PACKAGE_VERBOSE`: `[ON|OFF]`
   - Enable verbose output for Xrepo Packages.
 - `XREPO_BOOTSTRAP_XMAKE`: `[ON|OFF]`
@@ -205,7 +205,7 @@ Or use `set(var value)` in `CMakeLists.txt`.
 - `XREPO_PACKAGE_DISABLE`: `[ON|OFF]`
   - Set this to `ON` to disable `xrepo_package` function.
   - If setting this variable in `CMakeLists.txt`, please set it before including
-	`xrepo.cmake`.
+    `xrepo.cmake`.
 
 ### Switching compiler and cross compilation
 
@@ -216,7 +216,7 @@ the default one on system, platform must be set to "cross".
   - Specify toolchain name. Run `xmake show -l toolchains` to see available toolchains.
 - `XREPO_PLATFORM`: string, defaults to empty string
   - Specify platform name. If `XREPO_TOOLCHAIN` is specified and this is not,
-	`XREPO_PLATFORM` will be set to `cross`.
+    `XREPO_PLATFORM` will be set to `cross`.
 - `XREPO_ARCH`: string, defaults to empty string
   - Specify architecture name.
 - `XREPO_XMAKEFILE`: string, defaults to empty string
@@ -278,8 +278,8 @@ First, search for `gflags` package in Xrepo.
 ```
 $ xrepo search gflags
 The package names:
-	gflags:
-	  -> gflags-v2.2.2: The gflags package contains a C++ library that implements commandline flags processing. (in builtin-repo)
+    gflags:
+      -> gflags-v2.2.2: The gflags package contains a C++ library that implements commandline flags processing. (in builtin-repo)
 ```
 
 It's already in Xrepo, so we can use it. If it's not in Xrepo, we can create it in
@@ -290,12 +290,12 @@ Let's see what configs are available for the package before using it:
 ```
 $ xrepo info gflags
 ...
-	  -> configs:
-		 -> mt: Build the multi-threaded gflags library. (default: false)
-	  -> configs (builtin):
-		 -> debug: Enable debug symbols. (default: false)
-		 -> shared: Build shared library. (default: false)
-		 -> pic: Enable the position independent code. (default: true)
+      -> configs:
+         -> mt: Build the multi-threaded gflags library. (default: false)
+      -> configs (builtin):
+         -> debug: Enable debug symbols. (default: false)
+         -> shared: Build shared library. (default: false)
+         -> pic: Enable the position independent code. (default: true)
 ...
 ```
 
