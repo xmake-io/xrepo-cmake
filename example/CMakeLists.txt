@@ -22,11 +22,9 @@ xrepo_package("gflags 2.2.2"
     MODE debug
     CONFIGS "shared=true,mt=true")
 
-# TODO it need xmake 2.6.4
 # Call `xrepo_package` function to use custom package: myzlib
-#set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
-#xrepo_package("myzlib" ALIAS zlib)
-xrepo_package("zlib")
+set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
+xrepo_package("myzlib" ALIAS zlib)
 
 # Define target. We run cmake in example parent directory, thus we can't use
 # example as target name.
