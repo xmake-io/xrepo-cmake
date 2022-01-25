@@ -20,11 +20,12 @@ xrepo_package("gflags 2.2.2"
     CONFIGS "shared=true,mt=true"
     OUTPUT diagnosis)
 
+# TODO it need xmake 2.6.4
 # Call `xrepo_package` function to use custom package: myzlib
-set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
-xrepo_package("myzlib"
-    OUTPUT diagnosis
-    DIRECTORY_SCOPE)
+#set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
+#xrepo_package("myzlib"
+#    OUTPUT diagnosis
+#    DIRECTORY_SCOPE)
 
 # `xrepo_package` sets `gflags_DIR` variable in parent scope because gflags
 # provides cmake modules. So we can now call `find_package` to find gflags
