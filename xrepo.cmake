@@ -2,10 +2,11 @@ option(XREPO_PACKAGE_DISABLE "Disable Xrepo Packages" OFF)
 option(XREPO_PACKAGE_VERBOSE "Enable verbose output for Xrepo Packages" OFF)
 option(XREPO_BOOTSTRAP_XMAKE "Bootstrap Xmake automatically" ON)
 
-# Following options are for corss compilation, or when specifying a specific compiler.
+# Following options are for cross compilation, or when specifying a specific compiler.
 set(XREPO_PLATFORM "" CACHE STRING "Xrepo package platform")
 set(XREPO_ARCH "" CACHE STRING "Xrepo package architecture")
 set(XREPO_TOOLCHAIN "" CACHE STRING "Xrepo package toolchain")
+set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 
 # xrepo_package:
 #
@@ -235,6 +236,9 @@ function(xrepo_package package)
             message(STATUS "xrepo: setting platform to cross because toolchain is specified")
         endif()
     endif()
+    if(NOT "${XREPO_XMAKEFILE}" STREQUAL "")
+        set(includes "--includes=${XREPO_XMAKEFILE}")
+    endif()
 
     # Get package_name that will be used as various variables' prefix.
     _xrepo_package_name(${package})
@@ -242,7 +246,7 @@ function(xrepo_package package)
     # To speedup cmake re-configure, if xrepo command args is the same as the
     # cached value, load related variables from cache to avoid executing xrepo
     # command again.
-    set(_xrepo_cmdargs_${package_name} "${XREPO_CMD} ${verbose} ${platform} ${arch} ${toolchain} ${mode} ${configs} ${package}")
+    set(_xrepo_cmdargs_${package_name} "${XREPO_CMD} ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package}")
     if("${_cache_xrepo_cmdargs_${package_name}}" STREQUAL "${_xrepo_cmdargs_${package_name}}")
         message(STATUS "xrepo: ${package} already installed, using cached variables")
 
@@ -257,8 +261,8 @@ function(xrepo_package package)
         return()
     endif()
 
-    message(STATUS "xrepo install ${verbose} ${platform} ${arch} ${toolchain} ${mode} ${configs} '${package}'")
-    execute_process(COMMAND ${XREPO_CMD} install --yes ${verbose} ${platform} ${arch} ${toolchain} ${mode} ${configs} ${package}
+    message(STATUS "xrepo install ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} '${package}'")
+    execute_process(COMMAND ${XREPO_CMD} install --yes ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
         message(FATAL_ERROR "xrepo install failed, exit code: ${exit_code}")
@@ -317,7 +321,7 @@ function(_xrepo_package_name package)
 endfunction()
 
 macro(_xrepo_fetch_json)
-    execute_process(COMMAND ${XREPO_CMD} fetch --json ${mode} ${platform} ${arch} ${toolchain} ${configs} ${package}
+    execute_process(COMMAND ${XREPO_CMD} fetch --json ${mode} ${platform} ${arch} ${toolchain} ${includes} ${configs} ${package}
                     OUTPUT_VARIABLE json_output
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
@@ -392,7 +396,7 @@ endmacro()
 
 macro(_xrepo_fetch_cflags)
     # Use cflags to get include path. Then we look for lib and cmake dir relative to include path.
-    execute_process(COMMAND ${XREPO_CMD} fetch --cflags ${platform} ${arch} ${toolchain} ${mode} ${configs} ${package}
+    execute_process(COMMAND ${XREPO_CMD} fetch --cflags ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package}
                     OUTPUT_VARIABLE cflags_output
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
