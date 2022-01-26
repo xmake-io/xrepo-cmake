@@ -19,6 +19,6 @@ jobs:
 
       - name: Tests
         run: |
-          cmake example
+          cmake -DXREPO_PACKAGE_VERBOSE=ON example
           cmake --build .
 

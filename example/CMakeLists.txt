@@ -14,23 +14,17 @@ endif()
 # Include xrepo.cmake so we can use xrepo_package function.
 include(${CMAKE_BINARY_DIR}/xrepo.cmake)
 
+# Call `xrepo_package` function to use default pcre2
+xrepo_package("pcre2")
+
 # Call `xrepo_package` function to use gflags 2.2.2 with specific configs.
 xrepo_package("gflags 2.2.2"
     MODE debug
-    CONFIGS "shared=true,mt=true"
-    OUTPUT diagnosis)
+    CONFIGS "shared=true,mt=true")
 
-# TODO it need xmake 2.6.4
 # Call `xrepo_package` function to use custom package: myzlib
-#set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
-#xrepo_package("myzlib"
-#    OUTPUT diagnosis
-#    DIRECTORY_SCOPE)
-
-# `xrepo_package` sets `gflags_DIR` variable in parent scope because gflags
-# provides cmake modules. So we can now call `find_package` to find gflags
-# package.
-find_package(gflags CONFIG COMPONENTS shared)
+set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
+xrepo_package("myzlib" ALIAS zlib)
 
 # Define target. We run cmake in example parent directory, thus we can't use
 # example as target name.
@@ -38,5 +32,5 @@ add_executable(example-bin "")
 target_sources(example-bin PRIVATE
     src/main.cpp
 )
-target_link_libraries(example-bin gflags)
+xrepo_target_packages(example-bin pcre2 gflags zlib)
 

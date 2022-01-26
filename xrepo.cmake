@@ -11,45 +11,45 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 # xrepo_package:
 #
 # Parameters:
-#     package_spec: required
-#         The package name and version recognized by xrepo.
-#     CONFIGS: optional
-#         Run `xrepo info <package>` to see what configs are available.
-#     MODE: optional, debug|release
-#         If not specified: mode is set to "debug" only when $CMAKE_BUILD_TYPE
-#         is Debug. Otherwise mode is `release`.
-#     OUTPUT: optional, verbose|diagnosis|quiet
-#         Control output for xrepo install command.
-#     DIRECTORY_SCOPE: optional
-#         If specified, setup include and link directories for the package in
-#         CMake directory scope. CMake code in `add_subdirectory` can also use
-#         the package directly.
+#      package_spec: required
+#          The package name and version recognized by xrepo.
+#      CONFIGS: optional
+#          Run `xrepo info <package>` to see what configs are available.
+#      MODE: optional, debug|release
+#          If not specified: mode is set to "debug" only when $CMAKE_BUILD_TYPE
+#          is Debug. Otherwise mode is `release`.
+#      OUTPUT: optional, verbose|diagnosis|quiet
+#          Control output for xrepo install command.
+#      DIRECTORY_SCOPE: optional
+#          If specified, setup include and link directories for the package in
+#          CMake directory scope. CMake code in `add_subdirectory` can also use
+#          the package directly.
 #
 # Example:
 #
-#     xrepo_package(
-#         "foo 1.2.3"
-#         [CONFIGS feature1=true,feature2=false]
-#         [MODE debug|release]
-#         [OUTPUT verbose|diagnosis|quiet]
-#         [DIRECTORY_SCOPE]
-#     )
+#      xrepo_package(
+#          "foo 1.2.3"
+#          [CONFIGS feature1=true,feature2=false]
+#          [MODE debug|release]
+#          [OUTPUT verbose|diagnosis|quiet]
+#          [DIRECTORY_SCOPE]
+#      )
 #
 # `xrepo_package` does the following tasks for the above call:
 #
 # 1. Ensure specified package `foo` version 1.2.3 with given config is installed.
 # 2. Set variable `foo_INCLUDE_DIR` and `foo_LINK_DIR` to header and library
-#    path.
-#    -  Use these variables in `target_include_directories` and
-#      `target_link_directories` to use the package.
-#    - User should figure out what library to use for `target_link_libraries`.
-#    - If `DIRECTORY_SCOPE` is specified, execute following code so the package
-#      can be used in cmake's direcotry scope:
-#          include_directories(foo_INCLUDE_DIR)
-#          link_directories(foo_LINK_DIR)
+#     path.
+#     -    Use these variables in `target_include_directories` and
+#       `target_link_directories` to use the package.
+#     - User should figure out what library to use for `target_link_libraries`.
+#     - If `DIRECTORY_SCOPE` is specified, execute following code so the package
+#       can be used in cmake's direcotry scope:
+#           include_directories(foo_INCLUDE_DIR)
+#           link_directories(foo_LINK_DIR)
 # 3. If package provides cmake modules under `${foo_LINK_DIR}/cmake/foo`,
-#    set `foo_DIR` to the module directory so that `find_package(foo)`
-#    can be used.
+#     set `foo_DIR` to the module directory so that `find_package(foo)`
+#     can be used.
 function(_install_xmake_program)
     set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
     message(STATUS "xmake not found, Install it to ${XMAKE_BINARY_DIR} automatically!")
@@ -58,13 +58,14 @@ function(_install_xmake_program)
     endif()
 
     # Download xmake archive file
-    set(XMAKE_VERSION v2.6.3)
+    set(XMAKE_VERSION master)
+    set(XMAKE_RELEASE_LATEST v2.6.3)
     if(WIN32)
         set(XMAKE_ARCHIVE_FILE ${CMAKE_BINARY_DIR}/xmake-${XMAKE_VERSION}.win32.zip)
-        set(XMAKE_ARCHIVE_URL https://github.com/xmake-io/xmake/releases/download/${XMAKE_VERSION}/xmake-${XMAKE_VERSION}.win32.zip)
+        set(XMAKE_ARCHIVE_URL https://github.com/xmake-io/xmake/releases/download/${XMAKE_RELEASE_LATEST}/xmake-${XMAKE_VERSION}.win32.zip)
     else()
         set(XMAKE_ARCHIVE_FILE ${CMAKE_BINARY_DIR}/xmake-${XMAKE_VERSION}.zip)
-        set(XMAKE_ARCHIVE_URL https://github.com/xmake-io/xmake/releases/download/${XMAKE_VERSION}/xmake-${XMAKE_VERSION}.zip)
+        set(XMAKE_ARCHIVE_URL https://github.com/xmake-io/xmake/releases/download/${XMAKE_RELEASE_LATEST}/xmake-${XMAKE_VERSION}.zip)
     endif()
     if(NOT EXISTS "${XMAKE_ARCHIVE_FILE}")
         message(STATUS "Downloading xmake from ${XMAKE_ARCHIVE_URL}")
@@ -165,7 +166,7 @@ function(_xrepo_detect_json_support)
         endif()
 
         if(NOT "${help_output}" MATCHES "--json")
-            message(WARNING "xrepo fetch does not support --json (please upgrade), "
+            message(WARNING "xrepo fetch does not support --json (please upgrade xrepo/xmake to the latest version), "
                             "xrepo_package maybe unreliable to setup package variables")
             set(use_fetch_json OFF)
         endif()
@@ -187,7 +188,7 @@ function(xrepo_package package)
     endif()
 
     set(options DIRECTORY_SCOPE)
-    set(one_value_args CONFIGS MODE OUTPUT)
+    set(one_value_args CONFIGS MODE OUTPUT ALIAS)
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "" ${ARGN})
 
     # Construct options to xrepo install and fetch command.
@@ -241,7 +242,11 @@ function(xrepo_package package)
     endif()
 
     # Get package_name that will be used as various variables' prefix.
-    _xrepo_package_name(${package})
+    if(DEFINED ARG_ALIAS)
+        _xrepo_package_name(${ARG_ALIAS})
+    else()
+        _xrepo_package_name(${package})
+    endif()
 
     # To speedup cmake re-configure, if xrepo command args is the same as the
     # cached value, load related variables from cache to avoid executing xrepo
@@ -262,7 +267,7 @@ function(xrepo_package package)
     endif()
 
     message(STATUS "xrepo install ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} '${package}'")
-    execute_process(COMMAND ${XREPO_CMD} install --yes ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package}
+    execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ${XREPO_CMD} install --yes ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
         message(FATAL_ERROR "xrepo install failed, exit code: ${exit_code}")
@@ -280,6 +285,31 @@ function(xrepo_package package)
 
     # Store xrepo command and arguments for furture comparison.
     set(_cache_xrepo_cmdargs_${package_name} "${_xrepo_cmdargs_${package_name}}" CACHE INTERNAL "")
+endfunction()
+
+function(xrepo_target_packages target)
+    if(XREPO_PACKAGE_DISABLE)
+        return()
+    endif()
+
+    foreach(package_name IN LISTS ARGN)
+        if(DEFINED ${package_name}_INCLUDE_DIR)
+            message(STATUS "xrepo: target_include_directories(${target} PRIVATE ${${package_name}_INCLUDE_DIR})")
+            target_include_directories(${target} PRIVATE ${${package_name}_INCLUDE_DIR})
+        endif()
+        if(DEFINED ${package_name}_LINK_DIR)
+            message(STATUS "xrepo: target_link_directories(${target} PRIVATE ${${package_name}_LINK_DIR})")
+            target_link_directories(${target} PRIVATE ${${package_name}_LINK_DIR})
+        endif()
+        if(DEFINED ${package_name}_LINK_LIBRARIES)
+            message(STATUS "xrepo: target_link_libraries(${target} PRIVATE ${${package_name}_LINK_LIBRARIES})")
+            target_link_libraries(${target} PRIVATE ${${package_name}_LINK_LIBRARIES})
+        endif()
+        if(DEFINED ${package_name}_DEFINITIONS)
+            message(STATUS "xrepo: target_compile_definitions(${target} PRIVATE ${${package_name}_DEFINITIONS})")
+            target_compile_definitions(${target} PRIVATE ${${package_name}_DEFINITIONS})
+        endif()
+    endforeach()
 endfunction()
 
 function(_xrepo_directory_scope package_name)
@@ -373,6 +403,39 @@ macro(_xrepo_fetch_json)
                 endif()
             endforeach()
         endif()
+
+        # Loop over links.
+        string(JSON links_len ERROR_VARIABLE links_error LENGTH ${json_output} ${idx} links)
+        if("${links_error}" STREQUAL "NOTFOUND")
+            math(EXPR links_end "${links_len} - 1")
+            foreach(links_idx RANGE 0 ${links_end})
+                string(JSON dir GET ${json_output} ${idx} links ${links_idx})
+                list(APPEND links ${dir})
+                #message(STATUS "xrepo DEBUG: links ${idx} ${links_idx} ${dir}")
+            endforeach()
+        endif()
+
+        # Loop over syslinks.
+        string(JSON syslinks_len ERROR_VARIABLE syslinks_error LENGTH ${json_output} ${idx} syslinks)
+        if("${syslinks_error}" STREQUAL "NOTFOUND")
+            math(EXPR syslinks_end "${syslinks_len} - 1")
+            foreach(syslinks_idx RANGE 0 ${syslinks_end})
+                string(JSON dir GET ${json_output} ${idx} syslinks ${syslinks_idx})
+                list(APPEND syslinks ${dir})
+                #message(STATUS "xrepo DEBUG: syslinks ${idx} ${syslinks_idx} ${dir}")
+            endforeach()
+        endif()
+
+        # Loop over defines.
+        string(JSON defines_len ERROR_VARIABLE defines_error LENGTH ${json_output} ${idx} defines)
+        if("${defines_error}" STREQUAL "NOTFOUND")
+            math(EXPR defines_end "${defines_len} - 1")
+            foreach(defines_idx RANGE 0 ${defines_end})
+                string(JSON dir GET ${json_output} ${idx} defines ${defines_idx})
+                list(APPEND defines ${dir})
+                #message(STATUS "xrepo DEBUG: defines ${idx} ${defines_idx} ${dir}")
+            endforeach()
+        endif()
     endforeach()
 
     if(DEFINED includedirs)
@@ -389,6 +452,26 @@ macro(_xrepo_fetch_json)
         message(STATUS "xrepo: ${package_name}_LINK_DIR ${${package_name}_LINK_DIR}")
     else()
         message(STATUS "xrepo fetch --json: ${package_name} linkdirs not found")
+    endif()
+
+    if(DEFINED links)
+        set(${package_name}_LINK_LIBRARIES "${links}" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_LIBRARIES)
+        message(STATUS "xrepo: ${package_name}_LINK_LIBRARIES ${${package_name}_LINK_LIBRARIES}")
+    else()
+        message(STATUS "xrepo fetch --json: ${package_name} links not found")
+    endif()
+
+    if(DEFINED syslinks)
+        set(${package_name}_LINK_LIBRARIES "${syslinks}" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_LIBRARIES)
+        message(STATUS "xrepo: ${package_name}_LINK_LIBRARIES ${${package_name}_LINK_LIBRARIES}")
+    endif()
+
+    if(DEFINED defines)
+        set(${package_name}_DEFINITIONS "${defines}" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_DEFINITIONS)
+        message(STATUS "xrepo: ${package_name}_DEFINITIONS ${${package_name}_DEFINITIONS}")
     endif()
 
     set(_cache_xrepo_vars_${package_name} "${xrepo_vars_${package_name}}" CACHE INTERNAL "")
