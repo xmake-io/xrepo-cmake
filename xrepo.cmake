@@ -415,6 +415,17 @@ macro(_xrepo_fetch_json)
             endforeach()
         endif()
 
+        # Loop over syslinks.
+        string(JSON syslinks_len ERROR_VARIABLE syslinks_error LENGTH ${json_output} ${idx} syslinks)
+        if("${syslinks_error}" STREQUAL "NOTFOUND")
+            math(EXPR syslinks_end "${syslinks_len} - 1")
+            foreach(syslinks_idx RANGE 0 ${syslinks_end})
+                string(JSON dir GET ${json_output} ${idx} syslinks ${syslinks_idx})
+                list(APPEND syslinks ${dir})
+                #message(STATUS "xrepo DEBUG: syslinks ${idx} ${syslinks_idx} ${dir}")
+            endforeach()
+        endif()
+
         # Loop over defines.
         string(JSON defines_len ERROR_VARIABLE defines_error LENGTH ${json_output} ${idx} defines)
         if("${defines_error}" STREQUAL "NOTFOUND")
@@ -451,12 +462,16 @@ macro(_xrepo_fetch_json)
         message(STATUS "xrepo fetch --json: ${package_name} links not found")
     endif()
 
+    if(DEFINED syslinks)
+        set(${package_name}_LINK_LIBRARIES "${syslinks}" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_LIBRARIES)
+        message(STATUS "xrepo: ${package_name}_LINK_LIBRARIES ${${package_name}_LINK_LIBRARIES}")
+    endif()
+
     if(DEFINED defines)
         set(${package_name}_DEFINITIONS "${defines}" CACHE INTERNAL "")
         list(APPEND xrepo_vars_${package_name} ${package_name}_DEFINITIONS)
         message(STATUS "xrepo: ${package_name}_DEFINITIONS ${${package_name}_DEFINITIONS}")
-    else()
-        message(STATUS "xrepo fetch --json: ${package_name} defines not found")
     endif()
 
     set(_cache_xrepo_vars_${package_name} "${xrepo_vars_${package_name}}" CACHE INTERNAL "")
