@@ -267,7 +267,7 @@ function(xrepo_package package)
     endif()
 
     message(STATUS "xrepo install ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} '${package}'")
-    execute_process(COMMAND ${XREPO_CMD} install --yes ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package}
+    execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ${XREPO_CMD} install --yes ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
         message(FATAL_ERROR "xrepo install failed, exit code: ${exit_code}")
