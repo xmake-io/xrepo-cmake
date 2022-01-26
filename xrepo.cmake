@@ -166,7 +166,7 @@ function(_xrepo_detect_json_support)
         endif()
 
         if(NOT "${help_output}" MATCHES "--json")
-            message(WARNING "xrepo fetch does not support --json (please upgrade), "
+            message(WARNING "xrepo fetch does not support --json (please upgrade xrepo/xmake to the latest version), "
                             "xrepo_package maybe unreliable to setup package variables")
             set(use_fetch_json OFF)
         endif()
