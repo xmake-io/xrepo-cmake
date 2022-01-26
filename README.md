@@ -181,6 +181,8 @@ target_link_libraries(example-bin gflags)
 
 #### Add custom packages
 
+We can also add custom packages in our project.
+
 ```cmake
 set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
 xrepo_package("myzlib")
@@ -196,7 +198,21 @@ Define myzlib package in packages/xmake.lua
 
 ```lua
 package("myzlib")
-    -- ...
+    set_homepage("http://www.zlib.net")
+    set_description("A Massively Spiffy Yet Delicately Unobtrusive Compression Library")
+
+    set_urls("http://zlib.net/zlib-$(version).tar.gz",
+             "https://downloads.sourceforge.net/project/libpng/zlib/$(version)/zlib-$(version).tar.gz")
+
+    add_versions("1.2.10", "8d7e9f698ce48787b6e1c67e6bff79e487303e66077e25cb9784ac8835978017")
+
+    on_install(function (package)
+		-- TODO
+    end)
+
+    on_test(function (package)
+        assert(package:has_cfuncs("inflate", {includes = "zlib.h"}))
+    end)
 ```
 
 We can write a custom package in xmake.lua, please refer [Define Xrepo package](https://xmake.io/#/package/remote_package?id=package-description).
