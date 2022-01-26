@@ -138,7 +138,19 @@ endif()
 include(${CMAKE_BINARY_DIR}/xrepo.cmake)
 ```
 
-#### Add common packages
+#### Add basic packages
+
+```cmake
+xrepo_package("zlib")
+
+add_executable(example-bin "")
+target_sources(example-bin PRIVATE
+    src/main.cpp
+)
+xrepo_target_packages(example-bin zlib)
+```
+
+#### Add packages with configs
 
 ```cmake
 xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
