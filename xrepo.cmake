@@ -248,7 +248,9 @@ function(xrepo_package package)
         _xrepo_package_name(${package})
     endif()
 
-    set(_xrepo_cmdargs ${verbose} ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package})
+    # Verbose option should not be passed to xrepo fetch.
+    # Otherwise, the output would be invalid to parse.
+    set(_xrepo_cmdargs ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package})
 
     # To speedup cmake re-configure, if xrepo command and args are the same as
     # cached value, load related variables from cache to avoid executing xrepo
@@ -269,7 +271,7 @@ function(xrepo_package package)
     endif()
 
     message(STATUS "xrepo install ${_xrepo_cmdargs_${package_name}}")
-    execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ${XREPO_CMD} install --yes ${_xrepo_cmdargs}
+    execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ${XREPO_CMD} install --yes ${verbose} ${_xrepo_cmdargs}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
         message(FATAL_ERROR "xrepo install failed, exit code: ${exit_code}")
