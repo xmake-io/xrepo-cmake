@@ -355,8 +355,12 @@ endfunction()
 macro(_xrepo_fetch_json)
     execute_process(COMMAND ${XREPO_CMD} fetch --json ${_xrepo_cmdargs}
                     OUTPUT_VARIABLE json_output
+                    ERROR_VARIABLE json_error_output
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
+        message(STATUS "xrepo fetch --json:")
+        message(STATUS "STDOUT:\n${json_output}")
+        message(STATUS "STDERR:\n${json_error_output}")
         message(FATAL_ERROR "xrepo fetch --json failed, exit code: ${exit_code}")
     endif()
 
@@ -369,7 +373,13 @@ macro(_xrepo_fetch_json)
     # configs {mt=true,shared=true}.
     # It's error-prone so we don't support it for now.
     #message(STATUS "xrepo DEBUG: json output: ${json_output}")
-    string(JSON len LENGTH ${json_output})
+    string(JSON len ERROR_VARIABLE json_error LENGTH ${json_output})
+    if(NOT "${json_error}" STREQUAL "NOTFOUND")
+        message(STATUS "xrepo fetch --json:")
+        message(STATUS "STDOUT:\n${json_output}")
+        message(STATUS "location:\n${len}")
+        message(FATAL_ERROR "xrepo fetch --json: fail to parse output, error: ${json_error}")
+    endif()
     math(EXPR len_end "${len} - 1")
     foreach(idx RANGE 0 ${len_end})
         # Loop over includedirs.
@@ -483,8 +493,12 @@ macro(_xrepo_fetch_cflags)
     # Use cflags to get include path. Then we look for lib and cmake dir relative to include path.
     execute_process(COMMAND ${XREPO_CMD} fetch --cflags ${_xrepo_cmdargs}
                     OUTPUT_VARIABLE cflags_output
+                    ERROR_VARIABLE cflags_error_output
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
+        message(STATUS "xrepo fetch --cflags:")
+        message(STATUS "STDOUT:\n${cflags_output}")
+        message(STATUS "STDERR:\n${cflags_error_output}")
         message(FATAL_ERROR "xrepo fetch --cflags failed, exit code: ${exit_code}")
     endif()
 
