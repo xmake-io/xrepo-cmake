@@ -77,6 +77,7 @@ packages.
 xrepo_package(
     "foo 1.2.3"
     [CONFIGS feature1=true,feature2=false]
+    [CONFIGS path/to/script.lua]
     [MODE debug|release]
     [ALIAS aliasname]
     [OUTPUT verbose|diagnosis|quiet]
@@ -99,6 +100,10 @@ After calling `xrepo_package(foo)`, there are two ways to use `foo` package:
     include_directories(${foo_INCLUDE_DIR})
     link_directories(${foo_LINK_DIR})
   ```
+- `CONFIGS path/to/script.lua` is for fine control over package configs.
+  - For example:
+    - Exclude packages on system.
+    - Override dependent packages' default configs, e.g. set `shared=true`.
 
 #### xrepo_target_packages
 

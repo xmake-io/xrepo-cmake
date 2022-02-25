@@ -22,6 +22,9 @@ xrepo_package("gflags 2.2.2"
     MODE debug
     CONFIGS "shared=true,mt=true")
 
+xrepo_package("glog"
+    CONFIGS "packages/glog.lua")
+
 # Call `xrepo_package` function to use custom package: myzlib
 set(XREPO_XMAKEFILE ${CMAKE_CURRENT_SOURCE_DIR}/packages/xmake.lua)
 xrepo_package("myzlib" ALIAS zlib)

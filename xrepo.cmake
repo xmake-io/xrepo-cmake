@@ -15,6 +15,18 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #          The package name and version recognized by xrepo.
 #      CONFIGS: optional
 #          Run `xrepo info <package>` to see what configs are available.
+#          There are two ways to specify configs:
+#            1. String, for example "shared=true,ssl=openssl"
+#            2. Path to a lua script. This is for fine control over package configs.
+#               Refer to examples for how to use this.
+#               Note:
+#                 - Do not use ~ to refer to home directory. Non-absolute path
+#                   will be treated as relative to the current CMakeLists.txt.
+#                 - CONFIGS lua script is specified as a cmake configure dependency.
+#                   This means cmake re-configure is triggered if it's modified.
+#                   But if the lua script uses "include", and only the included lua script changes,
+#                   cmake re-configure is not triggered. Please re-run cmake configure
+#                   to make changes take effect.
 #      MODE: optional, debug|release
 #          If not specified: mode is set to "debug" only when $CMAKE_BUILD_TYPE
 #          is Debug. Otherwise mode is `release`.
@@ -30,6 +42,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #      xrepo_package(
 #          "foo 1.2.3"
 #          [CONFIGS feature1=true,feature2=false]
+#          [CONFIGS path/to/script.lua]
 #          [MODE debug|release]
 #          [OUTPUT verbose|diagnosis|quiet]
 #          [DIRECTORY_SCOPE]
@@ -40,7 +53,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 # 1. Ensure specified package `foo` version 1.2.3 with given config is installed.
 # 2. Set variable `foo_INCLUDE_DIR` and `foo_LINK_DIR` to header and library
 #     path.
-#     -    Use these variables in `target_include_directories` and
+#     - Use these variables in `target_include_directories` and
 #       `target_link_directories` to use the package.
 #     - User should figure out what library to use for `target_link_libraries`.
 #     - If `DIRECTORY_SCOPE` is specified, execute following code so the package
@@ -193,9 +206,26 @@ function(xrepo_package package)
 
     # Construct options to xrepo install and fetch command.
     if(DEFINED ARG_CONFIGS)
-        set(configs "--configs=${ARG_CONFIGS}")
-    else()
-        set(configs "")
+        if(ARG_CONFIGS MATCHES "\.lua$")
+            if(IS_ABSOLUTE "${ARG_CONFIGS}" AND EXISTS "${ARG_CONFIGS}")
+                set(_config_lua_script "${ARG_CONFIGS}")
+            elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${ARG_CONFIGS}")
+                set(_config_lua_script "${CMAKE_CURRENT_LIST_DIR}/${ARG_CONFIGS}")
+            endif()
+        endif()
+
+        if(DEFINED _config_lua_script)
+            set(configs "${_config_lua_script}")
+            # Trigger cmake configure when ${_config_lua_script} changes.
+            set_property(
+                DIRECTORY 
+                APPEND 
+                PROPERTY CMAKE_CONFIGURE_DEPENDS
+                "${_config_lua_script}"
+            )
+        else()
+            set(configs "--configs=${ARG_CONFIGS}")
+        endif()
     endif()
 
     if(DEFINED ARG_MODE)
@@ -250,12 +280,20 @@ function(xrepo_package package)
 
     # Verbose option should not be passed to xrepo fetch.
     # Otherwise, the output would be invalid to parse.
-    set(_xrepo_cmdargs ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs} ${package})
+    set(_xrepo_cmdargs ${platform} ${arch} ${toolchain} ${includes} ${mode} ${configs})
+    if(NOT DEFINED _config_lua_script)
+        list(APPEND _xrepo_cmdargs ${package})
+    endif()
 
     # To speedup cmake re-configure, if xrepo command and args are the same as
     # cached value, load related variables from cache to avoid executing xrepo
     # command again.
     string(REGEX REPLACE ";" " " _xrepo_cmdargs_${package_name} "${XREPO_CMD} install ${_xrepo_cmdargs}")
+    if(DEFINED _config_lua_script)
+        file(TIMESTAMP ${_config_lua_script} _config_lua_script_modify_timestamp)
+        set(_xrepo_cmdargs_${package_name} "${_xrepo_cmdargs_${package_name}} (mtime: ${_config_lua_script_modify_timestamp})")
+    endif()
+
     if("${_cache_xrepo_cmdargs_${package_name}}" STREQUAL "${_xrepo_cmdargs_${package_name}}")
         message(STATUS "xrepo: ${package} already installed, using cached variables")
 
@@ -270,11 +308,11 @@ function(xrepo_package package)
         return()
     endif()
 
-    message(STATUS "xrepo install ${_xrepo_cmdargs_${package_name}}")
+    message(STATUS "xrepo: ${_xrepo_cmdargs_${package_name}}")
     execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ${XREPO_CMD} install --yes ${verbose} ${_xrepo_cmdargs}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
-        message(FATAL_ERROR "xrepo install failed, exit code: ${exit_code}")
+        message(FATAL_ERROR "xrepo install ${package} failed, exit code: ${exit_code}")
     endif()
 
     if(XREPO_FETCH_JSON)
