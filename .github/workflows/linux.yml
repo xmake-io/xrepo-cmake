@@ -28,4 +28,4 @@ jobs:
 
       - name: Tests
         run: |
-          ./ci/test-unix.sh
+          ./scripts/test-unix.sh
