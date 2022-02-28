@@ -22,11 +22,10 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #               Note:
 #                 - Do not use ~ to refer to home directory. Non-absolute path
 #                   will be treated as relative to the current CMakeLists.txt.
-#                 - CONFIGS lua script is specified as a cmake configure dependency.
-#                   This means cmake re-configure is triggered if it's modified.
-#                   But if the lua script uses "include", and only the included lua script changes,
-#                   cmake re-configure is not triggered. Please re-run cmake configure
-#                   to make changes take effect.
+#                 - Only CONFIGS specified lua script modification time is checked
+#                   to decide whether xrepo install can be skipped. If using "includes"
+#                   in lua script, this is not reliable. Please touch the CONFIGS lua
+#                   script manually to trigger run xrepo install in that case.
 #      MODE: optional, debug|release
 #          If not specified: mode is set to "debug" only when $CMAKE_BUILD_TYPE
 #          is Debug. Otherwise mode is `release`.
