@@ -1,2 +1,2 @@
-includes(path.join(os.scriptdir(), "common.lua"))
+includes("common.lua")
 add_requires("gflags", gflags_configs())
