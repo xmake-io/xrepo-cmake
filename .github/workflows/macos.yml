@@ -22,7 +22,4 @@ jobs:
 
       - name: Tests
         run: |
-          cmake -DXREPO_PACKAGE_VERBOSE=ON example
-          make
-          touch example/CMakeLists.txt
-          make
+          ./scripts/test-unix.sh
