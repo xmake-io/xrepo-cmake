@@ -29,6 +29,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #      MODE: optional, debug|release
 #          If not specified: mode is set to "debug" only when $CMAKE_BUILD_TYPE
 #          is Debug. Otherwise mode is `release`.
+#          Note: setting `MODE debug` has the same effect as `CONFIGS debug=true`.
 #      OUTPUT: optional, verbose|diagnosis|quiet
 #          Control output for xrepo install command.
 #      DIRECTORY_SCOPE: optional
@@ -62,6 +63,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 # 3. If package provides cmake modules under `${foo_LINK_DIR}/cmake/foo`,
 #     set `foo_DIR` to the module directory so that `find_package(foo)`
 #     can be used.
+
 function(_install_xmake_program)
     set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
     message(STATUS "xmake not found, Install it to ${XMAKE_BINARY_DIR} automatically!")
@@ -187,11 +189,40 @@ function(_xrepo_detect_json_support)
     set(XREPO_FETCH_JSON ${use_fetch_json} CACHE BOOL "Use xrepo JSON output" FORCE)
 endfunction()
 
+function(_detect_toolchain)
+    if(NOT "${XREPO_TOOLCHAIN}" STREQUAL "")
+        return()
+    endif()
+
+    if(DEFINED CMAKE_C_COMPILER)
+        get_filename_component(_compiler_name "${CMAKE_C_COMPILER}" NAME)
+    elseif(DEFINED CMAKE_CXX_COMPILER)
+        get_filename_component(_compiler_name "${CMAKE_CXX_COMPILER}" NAME)
+        string(REPLACE "g++" "gcc" "${_compiler_name}" _compiler_name)
+        string(REPLACE "clang++" "clang" "${_compiler_name}" _compiler_name)
+    else()
+        return()
+    endif()
+
+    if(("${_compiler_name}" MATCHES "^gcc")
+            OR ("${_compiler_name}" MATCHES "^clang"))
+        message(STATUS "xrepo: set(XREPO_TOOLCHAIN ${_compiler_name}) because CMAKE_C_COMPILER or CMAKE_CXX_COMPILER is set")
+        set(XREPO_TOOLCHAIN "${_compiler_name}" PARENT_SCOPE)
+    else()
+        message(WARNING "xrepo: CMAKE_C_COMPILER or CMAKE_CXX_COMPILER is set but no known toolchain exists. Using system default toolchain.")
+    endif()
+endfunction()
+
 if(NOT XREPO_PACKAGE_DISABLE)
     # Setup for xmake.
     _detect_xmake_cmd()
     _xrepo_detect_json_support()
-    message(STATUS "xrepo fetch --json: ${XREPO_FETCH_JSON}")
+    message(STATUS "xrepo: fetch --json: ${XREPO_FETCH_JSON}")
+    _detect_toolchain()
+    if((NOT "${XREPO_TOOLCHAIN}" STREQUAL "") AND ("${XREPO_PLATFORM}" STREQUAL ""))
+	set(XREPO_PLATFORM "cross")
+	message(STATUS "xrepo: set(XREPO_PLATFORM cross) because toolchain is set")
+    endif()
 endif()
 
 function(xrepo_package package)
@@ -261,10 +292,6 @@ function(xrepo_package package)
     endif()
     if(NOT "${XREPO_TOOLCHAIN}" STREQUAL "")
         set(toolchain "--toolchain=${XREPO_TOOLCHAIN}")
-        if("${XREPO_PLATFORM}" STREQUAL "")
-            set(platform "--plat=cross")
-            message(STATUS "xrepo: setting platform to cross because toolchain is specified")
-        endif()
     endif()
     if(NOT "${XREPO_XMAKEFILE}" STREQUAL "")
         set(includes "--includes=${XREPO_XMAKEFILE}")
