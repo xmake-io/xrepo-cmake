@@ -238,7 +238,7 @@ function(xrepo_package package)
 
     # Construct options to xrepo install and fetch command.
     if(DEFINED ARG_CONFIGS)
-        if(ARG_CONFIGS MATCHES "\.lua$")
+        if(ARG_CONFIGS MATCHES "\\.lua$")
             if(IS_ABSOLUTE "${ARG_CONFIGS}" AND EXISTS "${ARG_CONFIGS}")
                 set(_config_lua_script "${ARG_CONFIGS}")
             elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${ARG_CONFIGS}")
