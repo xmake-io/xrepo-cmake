@@ -26,6 +26,10 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #                   to decide whether xrepo install can be skipped. If using "includes"
 #                   in lua script, this is not reliable. Please touch the CONFIGS lua
 #                   script manually to trigger run xrepo install in that case.
+#      DEPS: optional
+#          If specified, include all dependent libraries' settings in various
+#          variables. Also add all dependent libraries' install dir to
+#          CMAKE_PREFIX_PATH.
 #      MODE: optional, debug|release
 #          If not specified: mode is set to "debug" only when $CMAKE_BUILD_TYPE
 #          is Debug. Otherwise mode is `release`.
@@ -43,6 +47,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #          "foo 1.2.3"
 #          [CONFIGS feature1=true,feature2=false]
 #          [CONFIGS path/to/script.lua]
+#          [DEPS]
 #          [MODE debug|release]
 #          [OUTPUT verbose|diagnosis|quiet]
 #          [DIRECTORY_SCOPE]
@@ -230,7 +235,7 @@ function(xrepo_package package)
         return()
     endif()
 
-    set(options DIRECTORY_SCOPE)
+    set(options "DIRECTORY_SCOPE;DEPS")
     set(one_value_args CONFIGS MODE OUTPUT ALIAS)
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "" ${ARGN})
 
@@ -447,7 +452,11 @@ function(_xrepo_package_name package)
 endfunction()
 
 macro(_xrepo_fetch_json)
-    execute_process(COMMAND ${XREPO_CMD} fetch --json ${_xrepo_cmdargs}
+    if(ARG_DEPS)
+        set(_deps "--deps")
+    endif()
+
+    execute_process(COMMAND ${XREPO_CMD} fetch ${_deps} --json ${_xrepo_cmdargs}
                     OUTPUT_VARIABLE json_output
                     ERROR_VARIABLE json_error_output
                     RESULT_VARIABLE exit_code)
