@@ -10,9 +10,10 @@ grep -E "pcre2_INCLUDE_DIR" $output
 grep -E "pcre2_LINK_DIR" $output
 grep -E "pcre2_LINK_LIBRARIES" $output
 grep -E "pcre2_DEFINITIONS" $output
-grep -E "gflags_DIR" $output
-grep -E "glog_DIR" $output
+grep -E "gflags prepend to CMAKE_PREFIX_PATH" $output
+grep -E "glog prepend to CMAKE_PREFIX_PATH" $output
 grep -E "zlib_INCLUDE_DIR" $output
+grep -E "zlib prepend to CMAKE_PREFIX_PATH" $output
 make
 
 # Check for cached variables.

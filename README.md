@@ -78,6 +78,7 @@ xrepo_package(
     "foo 1.2.3"
     [CONFIGS feature1=true,feature2=false]
     [CONFIGS path/to/script.lua]
+    [DEPS]
     [MODE debug|release]
     [ALIAS aliasname]
     [OUTPUT verbose|diagnosis|quiet]
@@ -89,7 +90,7 @@ Some of the function arguments correspond directly to Xrepo command options.
 
 After calling `xrepo_package(foo)`, there are two ways to use `foo` package:
 
-- Call `find_package(foo)` if package provides cmake modules to find it
+- Call `find_package(foo)` if package provides cmake config-files.
   - Refer to CMake [`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html) documentation for more details
 - If the package does not provide cmake modules, `foo_INCLUDE_DIR` and
   `foo_LINK_DIR` variables will be set to the package include and library paths.
@@ -172,9 +173,9 @@ xrepo_target_packages(example-bin gflags)
 ```cmake
 xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
 
-# `xrepo_package` sets `gflags_DIR` variable in parent scope because gflags
-# provides cmake modules. So we can now call `find_package` to find gflags
-# package.
+# `xrepo_package` add gflags install directory to CMAKE_PREFIX_PATH.
+# As gflags provides cmake config-files, we can now call `find_package` to find
+# gflags package.
 find_package(gflags CONFIG COMPONENTS shared)
 
 add_executable(example-bin "")
@@ -212,7 +213,7 @@ package("myzlib")
     add_versions("1.2.10", "8d7e9f698ce48787b6e1c67e6bff79e487303e66077e25cb9784ac8835978017")
 
     on_install(function (package)
-		-- TODO
+  	-- TODO
     end)
 
     on_test(function (package)

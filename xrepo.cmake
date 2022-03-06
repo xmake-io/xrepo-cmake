@@ -60,9 +60,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #       can be used in cmake's direcotry scope:
 #           include_directories(foo_INCLUDE_DIR)
 #           link_directories(foo_LINK_DIR)
-# 3. If package provides cmake modules under `${foo_LINK_DIR}/cmake/foo`,
-#     set `foo_DIR` to the module directory so that `find_package(foo)`
-#     can be used.
+# 3. Append package install directory to `CMAKE_PREFIX_PATH`.
 
 function(_install_xmake_program)
     set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
@@ -331,10 +329,7 @@ function(xrepo_package package)
             message(STATUS "xrepo: ${var} ${${var}}")
         endforeach()
 
-        if(ARG_DIRECTORY_SCOPE)
-            _xrepo_directory_scope(${package_name})
-        endif()
-
+        _xrepo_finish_package_setup(${package_name})
         return()
     endif()
 
@@ -351,9 +346,7 @@ function(xrepo_package package)
         _xrepo_fetch_cflags()
     endif()
 
-    if(ARG_DIRECTORY_SCOPE)
-        _xrepo_directory_scope(${package_name})
-    endif()
+    _xrepo_finish_package_setup(${package_name})
 
     # Store xrepo command and arguments for furture comparison.
     set(_cache_xrepo_cmdargs_${package_name} "${_xrepo_cmdargs_${package_name}}" CACHE INTERNAL "")
@@ -384,6 +377,28 @@ function(xrepo_target_packages target)
     endforeach()
 endfunction()
 
+# Append parent directorie of include directory to CMAKE_PREFIX_PATH.
+macro(_xrepo_set_cmake_prefix_path package_name)
+    # CMake looks for quite a few directories under each prefix directory for config-file.cmake.
+    # Thus Using CMAKE_PREFIX_PATH is easier and more reliable for config-file # packages to be found
+    # than setting <package_name>_DIR.
+    # Refer to https://cmake.org/cmake/help/latest/command/find_package.html#config-mode-search-procedure
+
+    if(NOT DEFINED ${package_name}_INCLUDE_DIR)
+        return()
+    endif()
+
+    foreach(var ${${package_name}_INCLUDE_DIR})
+        get_filename_component(_install_dir "${var}" DIRECTORY)
+        if(NOT "${var}" IN_LIST CMAKE_PREFIX_PATH)
+            # Use prepend to make xrepo packages have high priority in search.
+            list(PREPEND CMAKE_PREFIX_PATH "${_install_dir}")
+            message(STATUS "xrepo: ${package_name} prepend to CMAKE_PREFIX_PATH: ${_install_dir}")
+        endif()
+        unset(_install_dir)
+    endforeach()
+endmacro()
+
 function(_xrepo_directory_scope package_name)
     if(DEFINED ${package_name}_INCLUDE_DIR)
         message(STATUS "xrepo: directory scope include_directories(${${package_name}_INCLUDE_DIR})")
@@ -394,6 +409,15 @@ function(_xrepo_directory_scope package_name)
         link_directories(${${package_name}_LINK_DIR})
     endif()
 endfunction()
+
+macro(_xrepo_finish_package_setup package_name)
+    _xrepo_set_cmake_prefix_path(${package_name})
+    if(ARG_DIRECTORY_SCOPE)
+        _xrepo_directory_scope(${package_name})
+    endif()
+
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} PARENT_SCOPE)
+endmacro()
 
 function(_validate_mode mode)
     string(TOLOWER ${mode} _mode)
@@ -453,7 +477,7 @@ macro(_xrepo_fetch_json)
     math(EXPR len_end "${len} - 1")
     foreach(idx RANGE 0 ${len_end})
         # Loop over includedirs.
-        string(JSON includedirs_len ERROR_VARIABLE includedirs_error LENGTH ${json_output} ${idx} includedirs)
+        string(JSON includedirs_len ERROR_VARIABLE includedirs_error LENGTH ${json_output} ${idx} "includedirs")
         if("${includedirs_error}" STREQUAL "NOTFOUND")
             math(EXPR includedirs_end "${includedirs_len} - 1")
             foreach(includedirs_idx RANGE 0 ${includedirs_end})
@@ -466,28 +490,18 @@ macro(_xrepo_fetch_json)
         endif()
 
         # Loop over linkdirs.
-        string(JSON linkdirs_len ERROR_VARIABLE linkdirs_error LENGTH ${json_output} ${idx} linkdirs)
+        string(JSON linkdirs_len ERROR_VARIABLE linkdirs_error LENGTH ${json_output} ${idx} "linkdirs")
         if("${linkdirs_error}" STREQUAL "NOTFOUND")
             math(EXPR linkdirs_end "${linkdirs_len} - 1")
             foreach(linkdirs_idx RANGE 0 ${linkdirs_end})
                 string(JSON dir GET ${json_output} ${idx} linkdirs ${linkdirs_idx})
                 list(APPEND linkdirs ${dir})
                 #message(STATUS "xrepo DEBUG: linkdirs ${idx} ${linkdirs_idx} ${dir}")
-
-                if(IS_DIRECTORY "${dir}/cmake")
-                    file(GLOB cmake_dirs LIST_DIRECTORIES true "${dir}/cmake/*")
-                    foreach(cmakedir ${cmake_dirs})
-                        get_filename_component(pkg "${cmakedir}" NAME)
-                        set(${pkg}_DIR "${cmakedir}" CACHE INTERNAL "")
-                        list(APPEND xrepo_vars_${package_name} ${pkg}_DIR)
-                        message(STATUS "xrepo: ${pkg}_DIR ${${pkg}_DIR}")
-                    endforeach()
-                endif()
             endforeach()
         endif()
 
         # Loop over links.
-        string(JSON links_len ERROR_VARIABLE links_error LENGTH ${json_output} ${idx} links)
+        string(JSON links_len ERROR_VARIABLE links_error LENGTH ${json_output} ${idx} "links")
         if("${links_error}" STREQUAL "NOTFOUND")
             math(EXPR links_end "${links_len} - 1")
             foreach(links_idx RANGE 0 ${links_end})
@@ -498,7 +512,7 @@ macro(_xrepo_fetch_json)
         endif()
 
         # Loop over syslinks.
-        string(JSON syslinks_len ERROR_VARIABLE syslinks_error LENGTH ${json_output} ${idx} syslinks)
+        string(JSON syslinks_len ERROR_VARIABLE syslinks_error LENGTH ${json_output} ${idx} "syslinks")
         if("${syslinks_error}" STREQUAL "NOTFOUND")
             math(EXPR syslinks_end "${syslinks_len} - 1")
             foreach(syslinks_idx RANGE 0 ${syslinks_end})
@@ -509,7 +523,7 @@ macro(_xrepo_fetch_json)
         endif()
 
         # Loop over defines.
-        string(JSON defines_len ERROR_VARIABLE defines_error LENGTH ${json_output} ${idx} defines)
+        string(JSON defines_len ERROR_VARIABLE defines_error LENGTH ${json_output} ${idx} "defines")
         if("${defines_error}" STREQUAL "NOTFOUND")
             math(EXPR defines_end "${defines_len} - 1")
             foreach(defines_idx RANGE 0 ${defines_end})
