@@ -49,3 +49,8 @@ xrepo_target_packages(example-bin pcre2 zlib)
 # here.
 target_link_libraries(example-bin PRIVATE glog::glog)
 
+# This is for testing pkgconfig path settings.
+message(STATUS "ENV PKG_CONFIG_PATH $ENV{PKG_CONFIG_PATH}")
+find_package(PkgConfig)
+pkg_check_modules(pcre2 NO_CMAKE_PATH libpcre2-posix)
+message(STATUS "pkg_check_modules pcre2_CFLAGS: ${pcre2_CFLAGS}")

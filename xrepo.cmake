@@ -404,6 +404,27 @@ macro(_xrepo_set_cmake_prefix_path package_name)
     endforeach()
 endmacro()
 
+# Append pkgconfig directory to PKG_CONFIG_PATH environment variable.
+# Some cmake find modules file may use pkgconfig to find header, library etc.
+# Refer to https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#a-sample-find-module
+# 
+# If CMAKE_MINIMUM_REQUIRED_VERSION is 3.1 or later, paths in CMAKE_PREFIX_PATH are added to pkg-config
+# search path. (https://cmake.org/cmake/help/latest/module/FindPkgConfig.html#variable:PKG_CONFIG_USE_CMAKE_PREFIX_PATH)
+# Thus this macro is only for projects that set CMAKE_MINIMUM_REQUIRED_VERSION less than 3.1.
+macro(_xrepo_set_pkgconfig_path)
+    if(NOT DEFINED ${package_name}_LINK_DIR)
+        return()
+    endif()
+
+    foreach(var ${${package_name}_LINK_DIR})
+        set(_pkgconfig_dir "${var}/pkgconfig")
+        if(IS_DIRECTORY "${_pkgconfig_dir}")
+            set(ENV{PKG_CONFIG_PATH} "${var}/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+            message(STATUS "xrepo: ${package_name} prepend to PKG_CONFIG_PATH: ${_pkgconfig_dir}")
+        endif()
+    endforeach()
+endmacro()
+
 function(_xrepo_directory_scope package_name)
     if(DEFINED ${package_name}_INCLUDE_DIR)
         message(STATUS "xrepo: directory scope include_directories(${${package_name}_INCLUDE_DIR})")
@@ -417,6 +438,7 @@ endfunction()
 
 macro(_xrepo_finish_package_setup package_name)
     _xrepo_set_cmake_prefix_path(${package_name})
+    _xrepo_set_pkgconfig_path(${package_name})
     if(ARG_DIRECTORY_SCOPE)
         _xrepo_directory_scope(${package_name})
     endif()
