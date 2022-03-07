@@ -117,6 +117,17 @@ xrepo_target_packages(
 )
 ```
 
+In case a package provides multiple libs and user need to select which one to link,
+pass `NO_LINK_LIBRARIES` to disable calling `target_link_libraries` with all libs.
+
+```cmake
+xrepo_target_packages(
+    target NO_LINK_LIBRARIES
+    package1 package2 ...
+)
+target_link_libraries(target pkg1 pkg2)
+```
+
 ### Use package from official repository
 
 Xrepo official repository: [xmake-repo](https://github.com/xmake-io/xmake-repo)

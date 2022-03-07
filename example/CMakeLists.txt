@@ -24,7 +24,6 @@ xrepo_package("gflags 2.2.2"
 xrepo_package("glog"
     # xrepo_package("gflags") would be unnecessary if we use DEPS to include dependent libraries.
     #DEPS
-    MODE debug
     CONFIGS "packages/glog.lua")
 
 # find_pacakge works because package install dir is added to CMAKE_PREFIX_PATH.
@@ -43,7 +42,13 @@ target_sources(example-bin PRIVATE
 )
 # For packges that does not provide cmake config-file packages,
 # xrepo_target_packges is convenient to setup include, library path and link targets.
-xrepo_target_packages(example-bin pcre2 zlib)
+# We can specify multiple packages in a single call.
+#xrepo_target_packages(example-bin pcre2 zlib)
+
+xrepo_target_packages(example-bin pcre2)
+# NO_LINK_LIBRARIES does not call target_link_libraries. User can select which lib to link with.
+xrepo_target_packages(example-bin zlib NO_LINK_LIBRARIES)
+target_link_libraries(example-bin PRIVATE z)
 # For packages that provide config-file packages, we can still use imported
 # targets for linking. glog::glog has dependency on gflags, thus not needed
 # here.
