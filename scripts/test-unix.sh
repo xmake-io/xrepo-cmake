@@ -14,7 +14,6 @@ grep -E "gflags prepend to CMAKE_PREFIX_PATH" $output
 grep -E "glog prepend to CMAKE_PREFIX_PATH" $output
 grep -E "zlib_INCLUDE_DIR" $output
 grep -E "zlib prepend to CMAKE_PREFIX_PATH" $output
-grep -E "ENV PKG_CONFIG_PATH.*pcre2" $output
 grep -E "pkg_check_modules pcre2_CFLAGS.*packages/p/pcre2" $output
 make
 

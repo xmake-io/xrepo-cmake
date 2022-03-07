@@ -170,9 +170,9 @@ function(_xrepo_detect_json_support)
     # Whether to use `xrepo fetch --json` to get package info.
     set(use_fetch_json ON)
 
-    if(${CMAKE_VERSION} VERSION_LESS "3.19")
-        message(WARNING "CMake version < 3.19 has no JSON support, "
-                        "xrepo_package maybe unreliable to setup package variables")
+    if(CMAKE_VERSION VERSION_LESS 3.19)
+        message(WARNING "Please use CMake version >= 3.19 for JSON support. "
+                        "Otherwise xrepo_package maybe unreliable to setup package variables.")
         set(use_fetch_json OFF)
     elseif(XREPO_CMD)
         execute_process(COMMAND ${XREPO_CMD} fetch --help
@@ -221,6 +221,17 @@ endfunction()
 if(NOT XREPO_PACKAGE_DISABLE)
     # Setup for xmake.
     _detect_xmake_cmd()
+
+    # Some cmake find module code may use pkgconfig to find header, library, etc.
+    # Refer to https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#a-sample-find-module
+    # If CMAKE_MINIMUM_REQUIRED_VERSION is 3.1 or later, paths in CMAKE_PREFIX_PATH are added to pkg-config
+    # search path. (https://cmake.org/cmake/help/latest/module/FindPkgConfig.html#variable:PKG_CONFIG_USE_CMAKE_PREFIX_PATH)
+    if(CMAKE_MINIMUM_REQUIRED_VERSION VERSION_LESS 3.1)
+        message(WARNING "xrepo: CMAKE_MINIMUM_REQUIRED_VERSION less than 3.1. "
+                        "CMAKE_PREFIX_PATH are not included in pkg-config search. "
+                        "Some find module code may fail or resolve to system installed libraries.")
+    endif()
+
     _xrepo_detect_json_support()
     message(STATUS "xrepo: fetch --json: ${XREPO_FETCH_JSON}")
     _detect_toolchain()
@@ -403,27 +414,6 @@ macro(_xrepo_set_cmake_prefix_path package_name)
     endforeach()
 endmacro()
 
-# Append pkgconfig directory to PKG_CONFIG_PATH environment variable.
-# Some cmake find modules file may use pkgconfig to find header, library etc.
-# Refer to https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#a-sample-find-module
-# 
-# If CMAKE_MINIMUM_REQUIRED_VERSION is 3.1 or later, paths in CMAKE_PREFIX_PATH are added to pkg-config
-# search path. (https://cmake.org/cmake/help/latest/module/FindPkgConfig.html#variable:PKG_CONFIG_USE_CMAKE_PREFIX_PATH)
-# Thus this macro is only for projects that set CMAKE_MINIMUM_REQUIRED_VERSION less than 3.1.
-macro(_xrepo_set_pkgconfig_path)
-    if(NOT DEFINED ${package_name}_LINK_DIR)
-        return()
-    endif()
-
-    foreach(var ${${package_name}_LINK_DIR})
-        set(_pkgconfig_dir "${var}/pkgconfig")
-        if(IS_DIRECTORY "${_pkgconfig_dir}")
-            set(ENV{PKG_CONFIG_PATH} "${var}/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-            message(STATUS "xrepo: ${package_name} prepend to PKG_CONFIG_PATH: ${_pkgconfig_dir}")
-        endif()
-    endforeach()
-endmacro()
-
 function(_xrepo_directory_scope package_name)
     if(DEFINED ${package_name}_INCLUDE_DIR)
         message(STATUS "xrepo: directory scope include_directories(${${package_name}_INCLUDE_DIR})")
@@ -437,7 +427,6 @@ endfunction()
 
 macro(_xrepo_finish_package_setup package_name)
     _xrepo_set_cmake_prefix_path(${package_name})
-    _xrepo_set_pkgconfig_path(${package_name})
     if(ARG_DIRECTORY_SCOPE)
         _xrepo_directory_scope(${package_name})
     endif()
