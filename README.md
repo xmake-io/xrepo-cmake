@@ -113,20 +113,22 @@ Add package includedirs and links/linkdirs to the given target.
 ```cmake
 xrepo_target_packages(
     target
+    [NO_LINK_LIBRARIES]
+    [PRIVATE|PUBLIC|INTERFACE]
     package1 package2 ...
 )
 ```
 
-In case a package provides multiple libs and user need to select which one to link,
-pass `NO_LINK_LIBRARIES` to disable calling `target_link_libraries` with all libs.
-
-```cmake
-xrepo_target_packages(
-    target NO_LINK_LIBRARIES
-    package1 package2 ...
-)
-target_link_libraries(target pkg1 pkg2)
-```
+- `NO_LINK_LIBRARIES`
+  - In case a package provides multiple libs and user need to select which one
+    to link, pass `NO_LINK_LIBRARIES` to disable calling `target_link_libraries`.
+    User should call `target_link_libraries` to setup correct library linking.
+- `PRIVATE|PUBLIC|INTERFACE`
+  - The default is not specifying propagation control keyword when calling
+    `target_include_libraries`, `target_link_libraries`, etc, because there's no
+    default choice on this in CMake.
+  - Refer to this [Stack Overflow answer](https://stackoverflow.com/a/26038443)
+    for differences.
 
 ### Use package from official repository
 

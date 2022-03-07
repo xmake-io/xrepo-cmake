@@ -45,10 +45,11 @@ target_sources(example-bin PRIVATE
 # We can specify multiple packages in a single call.
 #xrepo_target_packages(example-bin pcre2 zlib)
 
-xrepo_target_packages(example-bin pcre2)
+# We can also specify visibility for dependent libraries.
+xrepo_target_packages(example-bin PRIVATE pcre2)
 # NO_LINK_LIBRARIES does not call target_link_libraries. User can select which lib to link with.
-xrepo_target_packages(example-bin zlib NO_LINK_LIBRARIES)
-target_link_libraries(example-bin PRIVATE z)
+xrepo_target_packages(example-bin PUBLIC zlib NO_LINK_LIBRARIES)
+target_link_libraries(example-bin PUBLIC z)
 # For packages that provide config-file packages, we can still use imported
 # targets for linking. glog::glog has dependency on gflags, thus not needed
 # here.
@@ -58,4 +59,3 @@ target_link_libraries(example-bin PRIVATE glog::glog)
 find_package(PkgConfig)
 pkg_check_modules(pcre2 libpcre2-posix)
 message(STATUS "pkg_check_modules pcre2_CFLAGS: ${pcre2_CFLAGS}")
-
