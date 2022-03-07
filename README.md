@@ -64,6 +64,8 @@ Example use cases for this project:
 - New projects which have to use CMake, but want to use Xrepo to manage
   packages.
 
+Note: please use CMake 3.19 or later for reliable package usage in CMake code.
+
 ## Usage
 
 ### Apis
@@ -78,6 +80,7 @@ xrepo_package(
     "foo 1.2.3"
     [CONFIGS feature1=true,feature2=false]
     [CONFIGS path/to/script.lua]
+    [DEPS]
     [MODE debug|release]
     [ALIAS aliasname]
     [OUTPUT verbose|diagnosis|quiet]
@@ -87,23 +90,27 @@ xrepo_package(
 
 Some of the function arguments correspond directly to Xrepo command options.
 
-After calling `xrepo_package(foo)`, there are two ways to use `foo` package:
+`xrepo_package` adds package install directory to `CMAKE_PREFIX_PATH`. So `find_package`
+can be used. If `CMAKE_MINIMUM_REQUIRED_VERSION` >= 3.1, cmake `PkgConfig` will also search 
+for pkgconfig files under package install directories.
 
-- Call `find_package(foo)` if package provides cmake modules to find it
-  - Refer to CMake [`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html) documentation for more details
-- If the package does not provide cmake modules, `foo_INCLUDE_DIR` and
-  `foo_LINK_DIR` variables will be set to the package include and library paths.
-  Use these variables to setup include and library paths in your CMake code.
-  - If `DIRECTORY_SCOPE` is specified, `xrepo_package` will run following code
-    (so that user only need to specify lib name in `target_link_libraries`)
-  ```cmake
-    include_directories(${foo_INCLUDE_DIR})
-    link_directories(${foo_LINK_DIR})
-  ```
-- `CONFIGS path/to/script.lua` is for fine control over package configs.
-  - For example:
-    - Exclude packages on system.
-    - Override dependent packages' default configs, e.g. set `shared=true`.
+After calling `xrepo_package(foo)`, there are three ways to use `foo` package:
+
+1. Call `find_package(foo)` if package provides cmake config-files.
+    - Refer to CMake [`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html) documentation for more details.
+2. If the package does not provide cmake config files or find modules, following
+  variables can be used to use the pacakge
+    - `foo_INCLUDE_DIR`, `foo_LINK_DIR`, `foo_LINK_LIBRARIES`, `foo_DEFINITIONS`
+    - If `DIRECTORY_SCOPE` is specified, `xrepo_package` will run following code
+      ```cmake
+      include_directories(${foo_INCLUDE_DIR})
+      link_directories(${foo_LINK_DIR})
+3. Use `xrepo_target_packages`. Please refer to following section.
+
+Note `CONFIGS path/to/script.lua` is for fine control over package configs.
+For example:
+  - Exclude packages on system.
+  - Override dependent packages' default configs, e.g. set `shared=true`.
 
 #### xrepo_target_packages
 
@@ -112,9 +119,22 @@ Add package includedirs and links/linkdirs to the given target.
 ```cmake
 xrepo_target_packages(
     target
+    [NO_LINK_LIBRARIES]
+    [PRIVATE|PUBLIC|INTERFACE]
     package1 package2 ...
 )
 ```
+
+- `NO_LINK_LIBRARIES`
+  - In case a package provides multiple libs and user need to select which one
+    to link, pass `NO_LINK_LIBRARIES` to disable calling `target_link_libraries`.
+    User should call `target_link_libraries` to setup correct library linking.
+- `PRIVATE|PUBLIC|INTERFACE`
+  - The default is not specifying propagation control keyword when calling
+    `target_include_libraries`, `target_link_libraries`, etc, because there's no
+    default choice on this in CMake.
+  - Refer to this [Stack Overflow answer](https://stackoverflow.com/a/26038443)
+    for differences.
 
 ### Use package from official repository
 
@@ -172,9 +192,9 @@ xrepo_target_packages(example-bin gflags)
 ```cmake
 xrepo_package("gflags 2.2.2" CONFIGS "shared=true,mt=true")
 
-# `xrepo_package` sets `gflags_DIR` variable in parent scope because gflags
-# provides cmake modules. So we can now call `find_package` to find gflags
-# package.
+# `xrepo_package` add gflags install directory to CMAKE_PREFIX_PATH.
+# As gflags provides cmake config-files, we can now call `find_package` to find
+# gflags package.
 find_package(gflags CONFIG COMPONENTS shared)
 
 add_executable(example-bin "")
@@ -212,7 +232,7 @@ package("myzlib")
     add_versions("1.2.10", "8d7e9f698ce48787b6e1c67e6bff79e487303e66077e25cb9784ac8835978017")
 
     on_install(function (package)
-		-- TODO
+  	-- TODO
     end)
 
     on_test(function (package)
@@ -346,14 +366,14 @@ to get package installation information by ourself. `xrepo fetch` command does
 exactly this:
 
 ```
-xrepo fetch --mode=release --configs='mt=true,shared=true' 'gflags 2.2.2'
+xrepo fetch --json --mode=release --configs='mt=true,shared=true' 'gflags 2.2.2'
 ```
 
 The above command will print out package's include, library directory along with
 other information. `xrepo_package` uses these information to setup variables to use
 the specified package.
 
-Currently, `xrepo_package` uses only the `--cflags` option to get package
-include directory. Library and cmake module directory are infered from that
-directory, so it maybe unreliable to detect the correct paths. We will improve
-this in the future.
+For CMake 3.19 and later which has JSON support, `xrepo_package` parses the JSON
+output. For previous version of CMake, `xrepo_package` uses only the `--cflags` option
+to get package include directory. Library and cmake module directory are infered from that
+directory, so it maybe unreliable to detect the correct paths.

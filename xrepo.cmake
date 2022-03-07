@@ -26,6 +26,10 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #                   to decide whether xrepo install can be skipped. If using "includes"
 #                   in lua script, this is not reliable. Please touch the CONFIGS lua
 #                   script manually to trigger run xrepo install in that case.
+#      DEPS: optional
+#          If specified, include all dependent libraries' settings in various
+#          variables. Also add all dependent libraries' install dir to
+#          CMAKE_PREFIX_PATH.
 #      MODE: optional, debug|release
 #          If not specified: mode is set to "debug" only when $CMAKE_BUILD_TYPE
 #          is Debug. Otherwise mode is `release`.
@@ -43,6 +47,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #          "foo 1.2.3"
 #          [CONFIGS feature1=true,feature2=false]
 #          [CONFIGS path/to/script.lua]
+#          [DEPS]
 #          [MODE debug|release]
 #          [OUTPUT verbose|diagnosis|quiet]
 #          [DIRECTORY_SCOPE]
@@ -60,9 +65,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #       can be used in cmake's direcotry scope:
 #           include_directories(foo_INCLUDE_DIR)
 #           link_directories(foo_LINK_DIR)
-# 3. If package provides cmake modules under `${foo_LINK_DIR}/cmake/foo`,
-#     set `foo_DIR` to the module directory so that `find_package(foo)`
-#     can be used.
+# 3. Append package install directory to `CMAKE_PREFIX_PATH`.
 
 function(_install_xmake_program)
     set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
@@ -167,9 +170,9 @@ function(_xrepo_detect_json_support)
     # Whether to use `xrepo fetch --json` to get package info.
     set(use_fetch_json ON)
 
-    if(${CMAKE_VERSION} VERSION_LESS "3.19")
-        message(WARNING "CMake version < 3.19 has no JSON support, "
-                        "xrepo_package maybe unreliable to setup package variables")
+    if(CMAKE_VERSION VERSION_LESS 3.19)
+        message(WARNING "Please use CMake version >= 3.19 for JSON support. "
+                        "Otherwise xrepo_package maybe unreliable to setup package variables.")
         set(use_fetch_json OFF)
     elseif(XREPO_CMD)
         execute_process(COMMAND ${XREPO_CMD} fetch --help
@@ -218,12 +221,22 @@ endfunction()
 if(NOT XREPO_PACKAGE_DISABLE)
     # Setup for xmake.
     _detect_xmake_cmd()
+
+    # Some cmake find module code may use pkgconfig to find header, library, etc.
+    # Refer to https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#a-sample-find-module
+    # If CMAKE_MINIMUM_REQUIRED_VERSION is 3.1 or later, paths in CMAKE_PREFIX_PATH are added to pkg-config
+    # search path. (https://cmake.org/cmake/help/latest/module/FindPkgConfig.html#variable:PKG_CONFIG_USE_CMAKE_PREFIX_PATH)
+    if(CMAKE_MINIMUM_REQUIRED_VERSION VERSION_LESS 3.1)
+        message(WARNING "xrepo: CMAKE_MINIMUM_REQUIRED_VERSION less than 3.1. "
+                        "CMAKE_PREFIX_PATH are not included in pkg-config search. "
+                        "Some find module code may fail or resolve to system installed libraries.")
+    endif()
+
     _xrepo_detect_json_support()
     message(STATUS "xrepo: fetch --json: ${XREPO_FETCH_JSON}")
     _detect_toolchain()
     if((NOT "${XREPO_TOOLCHAIN}" STREQUAL "") AND ("${XREPO_PLATFORM}" STREQUAL ""))
-        set(XREPO_PLATFORM "cross")
-        message(STATUS "xrepo: set(XREPO_PLATFORM cross) because toolchain is set")
+        message(STATUS "xrepo: XREPO_TOOLCHAIN is set but XREPO_PLATFORM is not, this is experimental feature of xmake")
     endif()
 endif()
 
@@ -232,7 +245,7 @@ function(xrepo_package package)
         return()
     endif()
 
-    set(options DIRECTORY_SCOPE)
+    set(options "DIRECTORY_SCOPE;DEPS")
     set(one_value_args CONFIGS MODE OUTPUT ALIAS)
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "" ${ARGN})
 
@@ -331,10 +344,7 @@ function(xrepo_package package)
             message(STATUS "xrepo: ${var} ${${var}}")
         endforeach()
 
-        if(ARG_DIRECTORY_SCOPE)
-            _xrepo_directory_scope(${package_name})
-        endif()
-
+        _xrepo_finish_package_setup(${package_name})
         return()
     endif()
 
@@ -351,9 +361,7 @@ function(xrepo_package package)
         _xrepo_fetch_cflags()
     endif()
 
-    if(ARG_DIRECTORY_SCOPE)
-        _xrepo_directory_scope(${package_name})
-    endif()
+    _xrepo_finish_package_setup(${package_name})
 
     # Store xrepo command and arguments for furture comparison.
     set(_cache_xrepo_cmdargs_${package_name} "${_xrepo_cmdargs_${package_name}}" CACHE INTERNAL "")
@@ -364,25 +372,58 @@ function(xrepo_target_packages target)
         return()
     endif()
 
-    foreach(package_name IN LISTS ARGN)
+    set(options NO_LINK_LIBRARIES PRIVATE PUBLIC INTERFACE)
+    cmake_parse_arguments(ARG "${options}" "" "" ${ARGN})
+
+    if(ARG_PRIVATE)
+        set(_visibility "PRIVATE")
+    elseif(ARG_PUBLIC)
+        set(_visibility "PUBLIC")
+    elseif(ARG_INTERFACE)
+        set(_visibility "INTERFACE")
+    endif()
+
+    foreach(package_name IN LISTS ARG_UNPARSED_ARGUMENTS)
         if(DEFINED ${package_name}_INCLUDE_DIR)
-            message(STATUS "xrepo: target_include_directories(${target} PRIVATE ${${package_name}_INCLUDE_DIR})")
-            target_include_directories(${target} PRIVATE ${${package_name}_INCLUDE_DIR})
+            message(STATUS "xrepo: target_include_directories(${target} ${_visibility} ${${package_name}_INCLUDE_DIR})")
+            target_include_directories(${target} ${_visibility} ${${package_name}_INCLUDE_DIR})
         endif()
         if(DEFINED ${package_name}_LINK_DIR)
-            message(STATUS "xrepo: target_link_directories(${target} PRIVATE ${${package_name}_LINK_DIR})")
-            target_link_directories(${target} PRIVATE ${${package_name}_LINK_DIR})
+            message(STATUS "xrepo: target_link_directories(${target} ${_visibility} ${${package_name}_LINK_DIR})")
+            target_link_directories(${target} ${_visibility} ${${package_name}_LINK_DIR})
         endif()
-        if(DEFINED ${package_name}_LINK_LIBRARIES)
-            message(STATUS "xrepo: target_link_libraries(${target} PRIVATE ${${package_name}_LINK_LIBRARIES})")
-            target_link_libraries(${target} PRIVATE ${${package_name}_LINK_LIBRARIES})
+        if((DEFINED ${package_name}_LINK_LIBRARIES) AND (NOT ARG_NO_LINK_LIBRARIES))
+            message(STATUS "xrepo: target_link_libraries(${target} ${_visibility} ${${package_name}_LINK_LIBRARIES})")
+            target_link_libraries(${target} ${_visibility} ${${package_name}_LINK_LIBRARIES})
         endif()
         if(DEFINED ${package_name}_DEFINITIONS)
-            message(STATUS "xrepo: target_compile_definitions(${target} PRIVATE ${${package_name}_DEFINITIONS})")
-            target_compile_definitions(${target} PRIVATE ${${package_name}_DEFINITIONS})
+            message(STATUS "xrepo: target_compile_definitions(${target} ${_visibility} ${${package_name}_DEFINITIONS})")
+            target_compile_definitions(${target} ${_visibility} ${${package_name}_DEFINITIONS})
         endif()
     endforeach()
 endfunction()
+
+# Append parent directorie of include directory to CMAKE_PREFIX_PATH.
+macro(_xrepo_set_cmake_prefix_path package_name)
+    # CMake looks for quite a few directories under each prefix directory for config-file.cmake.
+    # Thus Using CMAKE_PREFIX_PATH is easier and more reliable for config-file # packages to be found
+    # than setting <package_name>_DIR.
+    # Refer to https://cmake.org/cmake/help/latest/command/find_package.html#config-mode-search-procedure
+
+    if(NOT DEFINED ${package_name}_INCLUDE_DIR)
+        return()
+    endif()
+
+    foreach(var ${${package_name}_INCLUDE_DIR})
+        get_filename_component(_install_dir "${var}" DIRECTORY)
+        if(NOT "${var}" IN_LIST CMAKE_PREFIX_PATH)
+            # Use prepend to make xrepo packages have high priority in search.
+            list(PREPEND CMAKE_PREFIX_PATH "${_install_dir}")
+            message(STATUS "xrepo: ${package_name} prepend to CMAKE_PREFIX_PATH: ${_install_dir}")
+        endif()
+        unset(_install_dir)
+    endforeach()
+endmacro()
 
 function(_xrepo_directory_scope package_name)
     if(DEFINED ${package_name}_INCLUDE_DIR)
@@ -394,6 +435,15 @@ function(_xrepo_directory_scope package_name)
         link_directories(${${package_name}_LINK_DIR})
     endif()
 endfunction()
+
+macro(_xrepo_finish_package_setup package_name)
+    _xrepo_set_cmake_prefix_path(${package_name})
+    if(ARG_DIRECTORY_SCOPE)
+        _xrepo_directory_scope(${package_name})
+    endif()
+
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} PARENT_SCOPE)
+endmacro()
 
 function(_validate_mode mode)
     string(TOLOWER ${mode} _mode)
@@ -423,7 +473,11 @@ function(_xrepo_package_name package)
 endfunction()
 
 macro(_xrepo_fetch_json)
-    execute_process(COMMAND ${XREPO_CMD} fetch --json ${_xrepo_cmdargs}
+    if(ARG_DEPS)
+        set(_deps "--deps")
+    endif()
+
+    execute_process(COMMAND ${XREPO_CMD} fetch ${_deps} --json ${_xrepo_cmdargs}
                     OUTPUT_VARIABLE json_output
                     ERROR_VARIABLE json_error_output
                     RESULT_VARIABLE exit_code)
@@ -453,7 +507,7 @@ macro(_xrepo_fetch_json)
     math(EXPR len_end "${len} - 1")
     foreach(idx RANGE 0 ${len_end})
         # Loop over includedirs.
-        string(JSON includedirs_len ERROR_VARIABLE includedirs_error LENGTH ${json_output} ${idx} includedirs)
+        string(JSON includedirs_len ERROR_VARIABLE includedirs_error LENGTH ${json_output} ${idx} "includedirs")
         if("${includedirs_error}" STREQUAL "NOTFOUND")
             math(EXPR includedirs_end "${includedirs_len} - 1")
             foreach(includedirs_idx RANGE 0 ${includedirs_end})
@@ -466,28 +520,18 @@ macro(_xrepo_fetch_json)
         endif()
 
         # Loop over linkdirs.
-        string(JSON linkdirs_len ERROR_VARIABLE linkdirs_error LENGTH ${json_output} ${idx} linkdirs)
+        string(JSON linkdirs_len ERROR_VARIABLE linkdirs_error LENGTH ${json_output} ${idx} "linkdirs")
         if("${linkdirs_error}" STREQUAL "NOTFOUND")
             math(EXPR linkdirs_end "${linkdirs_len} - 1")
             foreach(linkdirs_idx RANGE 0 ${linkdirs_end})
                 string(JSON dir GET ${json_output} ${idx} linkdirs ${linkdirs_idx})
                 list(APPEND linkdirs ${dir})
                 #message(STATUS "xrepo DEBUG: linkdirs ${idx} ${linkdirs_idx} ${dir}")
-
-                if(IS_DIRECTORY "${dir}/cmake")
-                    file(GLOB cmake_dirs LIST_DIRECTORIES true "${dir}/cmake/*")
-                    foreach(cmakedir ${cmake_dirs})
-                        get_filename_component(pkg "${cmakedir}" NAME)
-                        set(${pkg}_DIR "${cmakedir}" CACHE INTERNAL "")
-                        list(APPEND xrepo_vars_${package_name} ${pkg}_DIR)
-                        message(STATUS "xrepo: ${pkg}_DIR ${${pkg}_DIR}")
-                    endforeach()
-                endif()
             endforeach()
         endif()
 
         # Loop over links.
-        string(JSON links_len ERROR_VARIABLE links_error LENGTH ${json_output} ${idx} links)
+        string(JSON links_len ERROR_VARIABLE links_error LENGTH ${json_output} ${idx} "links")
         if("${links_error}" STREQUAL "NOTFOUND")
             math(EXPR links_end "${links_len} - 1")
             foreach(links_idx RANGE 0 ${links_end})
@@ -498,7 +542,7 @@ macro(_xrepo_fetch_json)
         endif()
 
         # Loop over syslinks.
-        string(JSON syslinks_len ERROR_VARIABLE syslinks_error LENGTH ${json_output} ${idx} syslinks)
+        string(JSON syslinks_len ERROR_VARIABLE syslinks_error LENGTH ${json_output} ${idx} "syslinks")
         if("${syslinks_error}" STREQUAL "NOTFOUND")
             math(EXPR syslinks_end "${syslinks_len} - 1")
             foreach(syslinks_idx RANGE 0 ${syslinks_end})
@@ -509,7 +553,7 @@ macro(_xrepo_fetch_json)
         endif()
 
         # Loop over defines.
-        string(JSON defines_len ERROR_VARIABLE defines_error LENGTH ${json_output} ${idx} defines)
+        string(JSON defines_len ERROR_VARIABLE defines_error LENGTH ${json_output} ${idx} "defines")
         if("${defines_error}" STREQUAL "NOTFOUND")
             math(EXPR defines_end "${defines_len} - 1")
             foreach(defines_idx RANGE 0 ${defines_end})
