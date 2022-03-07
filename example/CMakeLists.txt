@@ -47,9 +47,15 @@ target_sources(example-bin PRIVATE
 
 # We can also specify visibility for dependent libraries.
 xrepo_target_packages(example-bin PRIVATE pcre2)
+if(WIN32)
+xrepo_target_packages(example-bin PUBLIC zlib)
+else()
 # NO_LINK_LIBRARIES does not call target_link_libraries. User can select which lib to link with.
+# Note different platforms would use different lib name, thus its easier to use
+# xrepo_target_packages when possible.
 xrepo_target_packages(example-bin PUBLIC zlib NO_LINK_LIBRARIES)
 target_link_libraries(example-bin PUBLIC z)
+endif()
 # For packages that provide config-file packages, we can still use imported
 # targets for linking. glog::glog has dependency on gflags, thus not needed
 # here.
