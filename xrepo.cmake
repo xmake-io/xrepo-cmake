@@ -56,15 +56,15 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 # `xrepo_package` does the following tasks for the above call:
 #
 # 1. Ensure specified package `foo` version 1.2.3 with given config is installed.
-# 2. Set variable `foo_INCLUDE_DIR` and `foo_LINK_DIR` to header and library
+# 2. Set variable `foo_INCLUDE_DIRS` and `foo_LIBRARY_DIRS` to header and library
 #     path.
 #     - Use these variables in `target_include_directories` and
 #       `target_link_directories` to use the package.
 #     - User should figure out what library to use for `target_link_libraries`.
 #     - If `DIRECTORY_SCOPE` is specified, execute following code so the package
 #       can be used in cmake's direcotry scope:
-#           include_directories(foo_INCLUDE_DIR)
-#           link_directories(foo_LINK_DIR)
+#           include_directories(foo_INCLUDE_DIRS)
+#           link_directories(foo_LIBRARY_DIRS)
 # 3. Append package install directory to `CMAKE_PREFIX_PATH`.
 
 function(_install_xmake_program)
@@ -384,17 +384,17 @@ function(xrepo_target_packages target)
     endif()
 
     foreach(package_name IN LISTS ARG_UNPARSED_ARGUMENTS)
-        if(DEFINED ${package_name}_INCLUDE_DIR)
-            message(STATUS "xrepo: target_include_directories(${target} ${_visibility} ${${package_name}_INCLUDE_DIR})")
-            target_include_directories(${target} ${_visibility} ${${package_name}_INCLUDE_DIR})
+        if(DEFINED ${package_name}_INCLUDE_DIRS)
+            message(STATUS "xrepo: target_include_directories(${target} ${_visibility} ${${package_name}_INCLUDE_DIRS})")
+            target_include_directories(${target} ${_visibility} ${${package_name}_INCLUDE_DIRS})
         endif()
-        if(DEFINED ${package_name}_LINK_DIR)
-            message(STATUS "xrepo: target_link_directories(${target} ${_visibility} ${${package_name}_LINK_DIR})")
-            target_link_directories(${target} ${_visibility} ${${package_name}_LINK_DIR})
+        if(DEFINED ${package_name}_LIBRARY_DIRS)
+            message(STATUS "xrepo: target_link_directories(${target} ${_visibility} ${${package_name}_LIBRARY_DIRS})")
+            target_link_directories(${target} ${_visibility} ${${package_name}_LIBRARY_DIRS})
         endif()
-        if((DEFINED ${package_name}_LINK_LIBRARIES) AND (NOT ARG_NO_LINK_LIBRARIES))
-            message(STATUS "xrepo: target_link_libraries(${target} ${_visibility} ${${package_name}_LINK_LIBRARIES})")
-            target_link_libraries(${target} ${_visibility} ${${package_name}_LINK_LIBRARIES})
+        if((DEFINED ${package_name}_LIBRARIES) AND (NOT ARG_NO_LINK_LIBRARIES))
+            message(STATUS "xrepo: target_link_libraries(${target} ${_visibility} ${${package_name}_LIBRARIES})")
+            target_link_libraries(${target} ${_visibility} ${${package_name}_LIBRARIES})
         endif()
         if(DEFINED ${package_name}_DEFINITIONS)
             message(STATUS "xrepo: target_compile_definitions(${target} ${_visibility} ${${package_name}_DEFINITIONS})")
@@ -410,11 +410,11 @@ macro(_xrepo_set_cmake_prefix_path package_name)
     # than setting <package_name>_DIR.
     # Refer to https://cmake.org/cmake/help/latest/command/find_package.html#config-mode-search-procedure
 
-    if(NOT DEFINED ${package_name}_INCLUDE_DIR)
+    if(NOT DEFINED ${package_name}_INCLUDE_DIRS)
         return()
     endif()
 
-    foreach(var ${${package_name}_INCLUDE_DIR})
+    foreach(var ${${package_name}_INCLUDE_DIRS})
         get_filename_component(_install_dir "${var}" DIRECTORY)
         if(NOT "${var}" IN_LIST CMAKE_PREFIX_PATH)
             # Use prepend to make xrepo packages have high priority in search.
@@ -426,13 +426,13 @@ macro(_xrepo_set_cmake_prefix_path package_name)
 endmacro()
 
 function(_xrepo_directory_scope package_name)
-    if(DEFINED ${package_name}_INCLUDE_DIR)
-        message(STATUS "xrepo: directory scope include_directories(${${package_name}_INCLUDE_DIR})")
-        include_directories(${${package_name}_INCLUDE_DIR})
+    if(DEFINED ${package_name}_INCLUDE_DIRS)
+        message(STATUS "xrepo: directory scope include_directories(${${package_name}_INCLUDE_DIRS})")
+        include_directories(${${package_name}_INCLUDE_DIRS})
     endif()
-    if(DEFINED ${package_name}_LINK_DIR)
-        message(STATUS "xrepo: directory scope link_directories(${${package_name}_LINK_DIR})")
-        link_directories(${${package_name}_LINK_DIR})
+    if(DEFINED ${package_name}_LIBRARY_DIRS)
+        message(STATUS "xrepo: directory scope link_directories(${${package_name}_LIBRARY_DIRS})")
+        link_directories(${${package_name}_LIBRARY_DIRS})
     endif()
 endfunction()
 
@@ -565,33 +565,36 @@ macro(_xrepo_fetch_json)
     endforeach()
 
     if(DEFINED includedirs)
-        set(${package_name}_INCLUDE_DIR "${includedirs}" CACHE INTERNAL "")
-        list(APPEND xrepo_vars_${package_name} ${package_name}_INCLUDE_DIR)
-        message(STATUS "xrepo: ${package_name}_INCLUDE_DIR ${${package_name}_INCLUDE_DIR}")
+        set(${package_name}_INCLUDE_DIRS "${includedirs}" CACHE INTERNAL "")
+        set(${package_name}_INCLUDE_DIR "${includedirs}" CACHE INTERNAL "") # Keep compatibility, remove in the future.
+        list(APPEND xrepo_vars_${package_name} ${package_name}_INCLUDE_DIRS)
+        message(STATUS "xrepo: ${package_name}_INCLUDE_DIRS ${${package_name}_INCLUDE_DIRS}")
     else()
         message(STATUS "xrepo fetch --json: ${package_name} includedirs not found")
     endif()
 
     if(DEFINED linkdirs)
-        set(${package_name}_LINK_DIR "${linkdirs}" CACHE INTERNAL "")
-        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_DIR)
-        message(STATUS "xrepo: ${package_name}_LINK_DIR ${${package_name}_LINK_DIR}")
+        set(${package_name}_LIBRARY_DIRS "${linkdirs}" CACHE INTERNAL "")
+        set(${package_name}_LINK_DIR "${includedirs}" CACHE INTERNAL "") # Keep compatibility, remove in the future.
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LIBRARY_DIRS)
+        message(STATUS "xrepo: ${package_name}_LIBRARY_DIRS ${${package_name}_LIBRARY_DIRS}")
     else()
         message(STATUS "xrepo fetch --json: ${package_name} linkdirs not found")
     endif()
 
     if(DEFINED links)
-        set(${package_name}_LINK_LIBRARIES "${links}" CACHE INTERNAL "")
-        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_LIBRARIES)
-        message(STATUS "xrepo: ${package_name}_LINK_LIBRARIES ${${package_name}_LINK_LIBRARIES}")
+        set(${package_name}_LIBRARIES "${links}" CACHE INTERNAL "")
+        set(${package_name}_LINK_LIBRARIES "${links}" CACHE INTERNAL "") # Keep compatibility, remove in the future.
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LIBRARIES)
+        message(STATUS "xrepo: ${package_name}_LIBRARIES ${${package_name}_LIBRARIES}")
     else()
         message(STATUS "xrepo fetch --json: ${package_name} links not found")
     endif()
 
     if(DEFINED syslinks)
-        set(${package_name}_LINK_LIBRARIES "${syslinks}" CACHE INTERNAL "")
-        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_LIBRARIES)
-        message(STATUS "xrepo: ${package_name}_LINK_LIBRARIES ${${package_name}_LINK_LIBRARIES}")
+        set(${package_name}_LIBRARIES "${syslinks}" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LIBRARIES)
+        message(STATUS "xrepo: ${package_name}_LIBRARIES ${${package_name}_LIBRARIES}")
     endif()
 
     if(DEFINED defines)
@@ -618,14 +621,14 @@ macro(_xrepo_fetch_cflags)
 
     string(REGEX REPLACE "-I(.*)/include.*" "\\1" install_dir ${cflags_output})
 
-    set(${package_name}_INCLUDE_DIR "${install_dir}/include" CACHE INTERNAL "")
-    list(APPEND xrepo_vars_${package_name} ${package_name}_INCLUDE_DIR)
-    message(STATUS "xrepo: ${package_name}_INCLUDE_DIR ${${package_name}_INCLUDE_DIR}")
+    set(${package_name}_INCLUDE_DIRS "${install_dir}/include" CACHE INTERNAL "")
+    list(APPEND xrepo_vars_${package_name} ${package_name}_INCLUDE_DIRS)
+    message(STATUS "xrepo: ${package_name}_INCLUDE_DIRS ${${package_name}_INCLUDE_DIRS}")
 
     if(EXISTS "${install_dir}/lib")
-        set(${package_name}_LINK_DIR "${install_dir}/lib" CACHE INTERNAL "")
-        list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_DIR)
-        message(STATUS "xrepo: ${package_name}_LINK_DIR ${${package_name}_LINK_DIR}")
+        set(${package_name}_LIBRARY_DIRS "${install_dir}/lib" CACHE INTERNAL "")
+        list(APPEND xrepo_vars_${package_name} ${package_name}_LIBRARY_DIRS)
+        message(STATUS "xrepo: ${package_name}_LIBRARY_DIRS ${${package_name}_LIBRARY_DIRS}")
     endif()
     if(EXISTS "${install_dir}/lib/cmake/${package_name}")
         set(${package_name}_DIR "${install_dir}/lib/cmake/${package_name}" CACHE INTERNAL "")

@@ -98,19 +98,26 @@ After calling `xrepo_package(foo)`, there are three ways to use `foo` package:
 
 1. Call `find_package(foo)` if package provides cmake config-files.
     - Refer to CMake [`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html) documentation for more details.
-2. If the package does not provide cmake config files or find modules, following
-  variables can be used to use the pacakge
-    - `foo_INCLUDE_DIR`, `foo_LINK_DIR`, `foo_LINK_LIBRARIES`, `foo_DEFINITIONS`
-    - If `DIRECTORY_SCOPE` is specified, `xrepo_package` will run following code
-      ```cmake
-      include_directories(${foo_INCLUDE_DIR})
-      link_directories(${foo_LINK_DIR})
+2. If the package does not provide cmake config files or find modules
+   - Following variables can be used to use the pacakge (variable names following cmake
+     find modules [standard variable names](https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names))
+     - `foo_INCLUDE_DIRS`
+     - `foo_LIBRARY_DIRS`
+     - `foo_LIBRARIES`
+     - `foo_DEFINITIONS`
+   - If `DIRECTORY_SCOPE` is specified, `xrepo_package` will run following code
+     ```cmake
+     include_directories(${foo_INCLUDE_DIRS})
+     link_directories(${foo_LIBRARY_DIRS})
 3. Use `xrepo_target_packages`. Please refer to following section.
 
 Note `CONFIGS path/to/script.lua` is for fine control over package configs.
 For example:
   - Exclude packages on system.
   - Override dependent packages' default configs, e.g. set `shared=true`.
+
+If `DEPS` is specified, all dependent libraries will add to `CMAKE_PREFIX_PATH`, along with include, 
+libraries being included in the four variables.
 
 #### xrepo_target_packages
 
