@@ -109,6 +109,7 @@ After calling `xrepo_package(foo)`, there are three ways to use `foo` package:
      ```cmake
      include_directories(${foo_INCLUDE_DIRS})
      link_directories(${foo_LIBRARY_DIRS})
+     ```
 3. Use `xrepo_target_packages`. Please refer to following section.
 
 Note `CONFIGS path/to/script.lua` is for fine control over package configs.
