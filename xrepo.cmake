@@ -566,6 +566,7 @@ macro(_xrepo_fetch_json)
 
     if(DEFINED includedirs)
         set(${package_name}_INCLUDE_DIRS "${includedirs}" CACHE INTERNAL "")
+        set(${package_name}_INCLUDE_DIR "${includedirs}" CACHE INTERNAL "") # Keep compatibility, remove in the future.
         list(APPEND xrepo_vars_${package_name} ${package_name}_INCLUDE_DIRS)
         message(STATUS "xrepo: ${package_name}_INCLUDE_DIRS ${${package_name}_INCLUDE_DIRS}")
     else()
@@ -574,6 +575,7 @@ macro(_xrepo_fetch_json)
 
     if(DEFINED linkdirs)
         set(${package_name}_LIBRARY_DIRS "${linkdirs}" CACHE INTERNAL "")
+        set(${package_name}_LINK_DIR "${includedirs}" CACHE INTERNAL "") # Keep compatibility, remove in the future.
         list(APPEND xrepo_vars_${package_name} ${package_name}_LIBRARY_DIRS)
         message(STATUS "xrepo: ${package_name}_LIBRARY_DIRS ${${package_name}_LIBRARY_DIRS}")
     else()
@@ -582,6 +584,7 @@ macro(_xrepo_fetch_json)
 
     if(DEFINED links)
         set(${package_name}_LIBRARIES "${links}" CACHE INTERNAL "")
+        set(${package_name}_LINK_LIBRARIES "${links}" CACHE INTERNAL "") # Keep compatibility, remove in the future.
         list(APPEND xrepo_vars_${package_name} ${package_name}_LIBRARIES)
         message(STATUS "xrepo: ${package_name}_LIBRARIES ${${package_name}_LIBRARIES}")
     else()
