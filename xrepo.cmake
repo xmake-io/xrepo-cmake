@@ -406,7 +406,7 @@ endfunction()
 # Append parent directorie of include directory to CMAKE_PREFIX_PATH.
 macro(_xrepo_set_cmake_prefix_path package_name)
     # CMake looks for quite a few directories under each prefix directory for config-file.cmake.
-    # Thus Using CMAKE_PREFIX_PATH is easier and more reliable for config-file # packages to be found
+    # Thus Using CMAKE_PREFIX_PATH is easier and more reliable for config-file packages to be found
     # than setting <package_name>_DIR.
     # Refer to https://cmake.org/cmake/help/latest/command/find_package.html#config-mode-search-procedure
 
