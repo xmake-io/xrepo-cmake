@@ -8,6 +8,10 @@ set(XREPO_ARCH "" CACHE STRING "Xrepo package architecture")
 set(XREPO_TOOLCHAIN "" CACHE STRING "Xrepo package toolchain")
 set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 
+if(NOT XEPO_PARALLEL_JOBS_XMAKE)
+        set(XEPO_PARALLEL_JOBS_XMAKE "24")
+endif()
+
 # xrepo_package:
 #
 # Parameters:
@@ -349,7 +353,7 @@ function(xrepo_package package)
     endif()
 
     message(STATUS "xrepo: ${_xrepo_cmdargs_${package_name}}")
-    execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ${XREPO_CMD} install --yes ${verbose} ${_xrepo_cmdargs}
+    execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ${XREPO_CMD} install --yes ${verbose} -j${XEPO_PARALLEL_JOBS_XMAKE} ${_xrepo_cmdargs}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
         message(FATAL_ERROR "xrepo install ${package} failed, exit code: ${exit_code}")
