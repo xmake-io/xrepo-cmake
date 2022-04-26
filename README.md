@@ -266,6 +266,10 @@ Or use `set(var value)` in `CMakeLists.txt`.
   - Set this to `ON` to disable `xrepo_package` function.
   - If setting this variable in `CMakeLists.txt`, please set it before including
     `xrepo.cmake`.
+- `XREPO_BUILD_PARALLEL_JOBS`: `[COUNT]`
+  - Set parallel compilation threads num function.
+  - If setting this variable in `CMakeLists.txt`, please set it before including
+    `xrepo.cmake`.
 
 ### Switching compiler and cross compilation
 

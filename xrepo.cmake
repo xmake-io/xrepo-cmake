@@ -348,8 +348,12 @@ function(xrepo_package package)
         return()
     endif()
 
+    if(XREPO_BUILD_PARALLEL_JOBS)
+        set(XREPO_BUILD_PARALLEL_JOBS_STR -j${XREPO_BUILD_PARALLEL_JOBS})
+    endif()
+
     message(STATUS "xrepo: ${_xrepo_cmdargs_${package_name}}")
-    execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ${XREPO_CMD} install --yes ${verbose} ${_xrepo_cmdargs}
+    execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ${XREPO_CMD} install --yes ${verbose} ${XREPO_BUILD_PARALLEL_JOBS_STR} ${_xrepo_cmdargs}
                     RESULT_VARIABLE exit_code)
     if(NOT "${exit_code}" STREQUAL "0")
         message(FATAL_ERROR "xrepo install ${package} failed, exit code: ${exit_code}")
