@@ -270,6 +270,10 @@ Or use `set(var value)` in `CMakeLists.txt`.
   - Set parallel compilation threads num function.
   - If setting this variable in `CMakeLists.txt`, please set it before including
     `xrepo.cmake`.
+- `XMAKE_RELEASE_LATEST`: `[VERSION]`
+  - Set xmake version.
+  - If setting this variable in `CMakeLists.txt`, please set it before including
+    `xrepo.cmake`.
 
 ### Switching compiler and cross compilation
 

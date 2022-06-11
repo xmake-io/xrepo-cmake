@@ -76,7 +76,9 @@ function(_install_xmake_program)
 
     # Download xmake archive file
     set(XMAKE_VERSION master)
-    set(XMAKE_RELEASE_LATEST v2.6.3)
+    if (NOT XMAKE_RELEASE_LATEST)
+        set(XMAKE_RELEASE_LATEST v2.6.7)
+    endif()
     if(WIN32)
         set(XMAKE_ARCHIVE_FILE ${CMAKE_BINARY_DIR}/xmake-${XMAKE_VERSION}.win32.zip)
         set(XMAKE_ARCHIVE_URL https://github.com/xmake-io/xmake/releases/download/${XMAKE_RELEASE_LATEST}/xmake-${XMAKE_VERSION}.win32.zip)
