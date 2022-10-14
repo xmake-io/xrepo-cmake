@@ -8,6 +8,7 @@ rm -rf CMakeCache.txt CMakeFiles/ cmake_install.cmake
 # First build.
 output=cmake.log.0
 cmake -DXREPO_PACKAGE_VERBOSE=ON example | tee $output
+grep -E 'mode=debug pcre2' $output
 grep -E "pcre2_INCLUDE_DIRS" $output
 grep -E "pcre2_LIBRARY_DIRS" $output
 grep -E "pcre2_LIBRARIES" $output
