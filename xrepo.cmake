@@ -31,9 +31,8 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #          variables. Also add all dependent libraries' install dir to
 #          CMAKE_PREFIX_PATH.
 #      MODE: optional, debug|release
-#          If not specified: mode is set to "debug" only when $CMAKE_BUILD_TYPE
-#          is Debug. Otherwise mode is `release`.
-#          Note: setting `MODE debug` has the same effect as `CONFIGS debug=true`.
+#          Pass `--mode` option to xrepo install command. If not specified,
+#          `--mode` option is not passed.
 #      OUTPUT: optional, verbose|diagnosis|quiet
 #          Control output for xrepo install command.
 #      DIRECTORY_SCOPE: optional
@@ -278,15 +277,7 @@ function(xrepo_package package)
     endif()
 
     if(DEFINED ARG_MODE)
-        _validate_mode(${ARG_MODE})
         set(mode "--mode=${ARG_MODE}")
-    else()
-        string(TOLOWER "${CMAKE_BUILD_TYPE}" _cmake_build_type)
-        if(_cmake_build_type STREQUAL "debug")
-            set(mode "--mode=debug")
-        else()
-            set(mode "--mode=release")
-        endif()
     endif()
 
     if(XREPO_PACKAGE_VERBOSE)
@@ -450,13 +441,6 @@ macro(_xrepo_finish_package_setup package_name)
 
     set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} PARENT_SCOPE)
 endmacro()
-
-function(_validate_mode mode)
-    string(TOLOWER ${mode} _mode)
-    if(NOT ((_mode STREQUAL "debug") OR (_mode STREQUAL "release")))
-        message(FATAL_ERROR "xrepo_package invalid MODE: ${mode}, valid values: debug, release")
-    endif()
-endfunction()
 
 function(_xrepo_package_name package)
     # For find_package(pkg) to work, we need to set variable <pkg>_DIR to the

@@ -15,7 +15,7 @@ endif()
 include(${CMAKE_BINARY_DIR}/xrepo.cmake)
 
 # Call `xrepo_package` function to use default pcre2
-xrepo_package("pcre2")
+xrepo_package("pcre2" MODE debug)
 
 # Call `xrepo_package` function to use gflags 2.2.2 with specific configs.
 xrepo_package("gflags 2.2.2"
