@@ -7,13 +7,13 @@
 
   <div>
     <a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3AWindows">
-      <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/Windows/main.svg?style=flat-square&logo=windows" alt="github-ci" />
+      <img src="https://img.shields.io/github/actions/workflow/status/xmake-io/xrepo-cmake/windows.yml?branch=main&style=flat-square&logo=windows" alt="github-ci" />
     </a>
     <a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3ALinux">
-      <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/Linux/main.svg?style=flat-square&logo=linux" alt="github-ci" />
+      <img src="https://img.shields.io/github/actions/workflow/status/xmake-io/xrepo-cmake/linux.yml?branch=main&style=flat-square&logo=windows" alt="github-ci" />
     </a>
     <a href="https://github.com/xmake-io/xrepo-cmake/actions?query=workflow%3AmacOS">
-      <img src="https://img.shields.io/github/workflow/status/xmake-io/xrepo-cmake/macOS/main.svg?style=flat-square&logo=apple" alt="github-ci" />
+      <img src="https://img.shields.io/github/actions/workflow/status/xmake-io/xrepo-cmake/macos.yml?branch=main&style=flat-square&logo=windows" alt="github-ci" />
     </a>
   </div>
   <div>
