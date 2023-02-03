@@ -76,7 +76,7 @@ function(_install_xmake_program)
     # Download xmake archive file
     set(XMAKE_VERSION master)
     if (NOT XMAKE_RELEASE_LATEST)
-        set(XMAKE_RELEASE_LATEST v2.6.7)
+        set(XMAKE_RELEASE_LATEST v2.7.6)
     endif()
     if(WIN32)
         set(XMAKE_ARCHIVE_FILE ${CMAKE_BINARY_DIR}/xmake-${XMAKE_VERSION}.win32.zip)
@@ -111,6 +111,14 @@ function(_install_xmake_program)
             set(XMAKE_CMD ${XMAKE_BINARY} PARENT_SCOPE)
         endif()
     else()
+        message(STATUS "Configuring xmake")
+        execute_process(COMMAND ./configure
+            WORKING_DIRECTORY ${XMAKE_BINARY_DIR}
+            RESULT_VARIABLE exit_code)
+        if(NOT "${exit_code}" STREQUAL "0")
+            message(FATAL_ERROR "Configure xmake failed, exit code: ${exit_code}")
+        endif()
+
         message(STATUS "Building xmake")
         execute_process(COMMAND make
             WORKING_DIRECTORY ${XMAKE_BINARY_DIR}
