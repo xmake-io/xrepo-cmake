@@ -70,14 +70,14 @@ function(_install_xmake_program)
     if (NOT XMAKE_RELEASE_LATEST)
         set(XMAKE_RELEASE_LATEST 2.7.6)
     endif()
-    set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake-${XMAKE_RELEASE_LATEST})
+    set(XMAKE_VERSION master)
+    set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
     message(STATUS "xmake not found, Install it to ${XMAKE_BINARY_DIR} automatically!")
     if(EXISTS "${XMAKE_BINARY_DIR}")
         file(REMOVE_RECURSE ${XMAKE_BINARY_DIR})
     endif()
 
     # Download xmake archive file
-    set(XMAKE_VERSION master)
     if(WIN32)
         set(XMAKE_ARCHIVE_FILE ${CMAKE_BINARY_DIR}/xmake-${XMAKE_VERSION}.win32.zip)
         set(XMAKE_ARCHIVE_URL https://github.com/xmake-io/xmake/releases/download/v${XMAKE_RELEASE_LATEST}/xmake-${XMAKE_VERSION}.win32.zip)
@@ -111,17 +111,18 @@ function(_install_xmake_program)
             set(XMAKE_CMD ${XMAKE_BINARY} PARENT_SCOPE)
         endif()
     else()
+        set(XMAKE_SOURCE_DIR ${XMAKE_BINARY_DIR}/xmake-${XMAKE_RELEASE_LATEST})
         message(STATUS "Configuring xmake")
-        execute_process(COMMAND ./configure
-            WORKING_DIRECTORY ${XMAKE_BINARY_DIR}
+        execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD ./configure
+            WORKING_DIRECTORY ${XMAKE_SOURCE_DIR}
             RESULT_VARIABLE exit_code)
         if(NOT "${exit_code}" STREQUAL "0")
             message(FATAL_ERROR "Configure xmake failed, exit code: ${exit_code}")
         endif()
 
         message(STATUS "Building xmake")
-        execute_process(COMMAND make
-            WORKING_DIRECTORY ${XMAKE_BINARY_DIR}
+        execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CC --unset=CXX --unset=LD make -j4
+            WORKING_DIRECTORY ${XMAKE_SOURCE_DIR}
             RESULT_VARIABLE exit_code)
         if(NOT "${exit_code}" STREQUAL "0")
             message(FATAL_ERROR "Build xmake failed, exit code: ${exit_code}")
@@ -129,7 +130,7 @@ function(_install_xmake_program)
 
         message(STATUS "Installing xmake")
         execute_process(COMMAND make install PREFIX=${XMAKE_BINARY_DIR}/install
-            WORKING_DIRECTORY ${XMAKE_BINARY_DIR}
+            WORKING_DIRECTORY ${XMAKE_SOURCE_DIR}
             RESULT_VARIABLE exit_code)
         if(NOT "${exit_code}" STREQUAL "0")
             message(FATAL_ERROR "Install xmake failed, exit code: ${exit_code}")
