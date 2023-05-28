@@ -387,6 +387,8 @@ function(xrepo_target_packages target)
         set(_visibility "PUBLIC")
     elseif(ARG_INTERFACE)
         set(_visibility "INTERFACE")
+    else()
+        set(_visibility "PRIVATE")
     endif()
 
     foreach(package_name IN LISTS ARG_UNPARSED_ARGUMENTS)
