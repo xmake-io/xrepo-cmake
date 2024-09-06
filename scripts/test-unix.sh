@@ -18,8 +18,8 @@ grep -E "glog prepend to CMAKE_PREFIX_PATH" $output
 grep -E "zlib_INCLUDE_DIRS" $output
 grep -E "zlib prepend to CMAKE_PREFIX_PATH" $output
 grep -E "pkg_check_modules pcre2_CFLAGS.*packages/p/pcre2" $output
-grep -E "target_link_libraries\(example-bin PRIVATE pcre2-8\)" $output
-grep -v -E"xrepo: target_link_libraries\(example-bin PRIVATE z\)" $output
+grep -E "target_link_libraries\(example-bin PRIVATE pcre2-posix;pcre2-8\)" $output
+grep -v -E "xrepo: target_link_libraries\(example-bin PRIVATE z\)" $output
 make
 
 # Check for cached variables.
