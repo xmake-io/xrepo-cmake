@@ -475,10 +475,10 @@ endfunction()
 
 macro(_xrepo_fetch_json)
     if(ARG_DEPS)
-        set(_deps "--deps")
+        set(_xrepo_deps "--deps")
     endif()
 
-    execute_process(COMMAND ${XREPO_CMD} fetch ${_deps} --json ${_xrepo_cmdargs}
+    execute_process(COMMAND ${XREPO_CMD} fetch ${_xrepo_deps} --json ${_xrepo_cmdargs}
                     OUTPUT_VARIABLE json_output
                     ERROR_VARIABLE json_error_output
                     RESULT_VARIABLE exit_code)
