@@ -68,7 +68,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 
 function(_install_xmake_program)
     if (NOT XMAKE_RELEASE_LATEST)
-        set(XMAKE_RELEASE_LATEST 2.7.6)
+        set(XMAKE_RELEASE_LATEST 2.9.4)
     endif()
     set(XMAKE_VERSION master)
     set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
