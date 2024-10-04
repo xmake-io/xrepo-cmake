@@ -509,7 +509,7 @@ macro(_xrepo_fetch_json)
     foreach(idx RANGE 0 ${len_end})
         # Loop over includedirs.
         string(JSON includedirs_len ERROR_VARIABLE includedirs_error LENGTH ${json_output} ${idx} "includedirs")
-        if("${includedirs_error}" STREQUAL "NOTFOUND")
+        if("${includedirs_error}" STREQUAL "NOTFOUND" AND NOT "${includedirs_len}" EQUAL 0)
             math(EXPR includedirs_end "${includedirs_len} - 1")
             foreach(includedirs_idx RANGE 0 ${includedirs_end})
                 string(JSON dir GET ${json_output} ${idx} includedirs ${includedirs_idx})
@@ -522,7 +522,7 @@ macro(_xrepo_fetch_json)
 
         # Loop over linkdirs.
         string(JSON linkdirs_len ERROR_VARIABLE linkdirs_error LENGTH ${json_output} ${idx} "linkdirs")
-        if("${linkdirs_error}" STREQUAL "NOTFOUND")
+        if("${linkdirs_error}" STREQUAL "NOTFOUND" AND NOT "${linkdirs_len}" EQUAL 0)
             math(EXPR linkdirs_end "${linkdirs_len} - 1")
             foreach(linkdirs_idx RANGE 0 ${linkdirs_end})
                 string(JSON dir GET ${json_output} ${idx} linkdirs ${linkdirs_idx})
@@ -533,7 +533,7 @@ macro(_xrepo_fetch_json)
 
         # Loop over links.
         string(JSON links_len ERROR_VARIABLE links_error LENGTH ${json_output} ${idx} "links")
-        if("${links_error}" STREQUAL "NOTFOUND")
+        if("${links_error}" STREQUAL "NOTFOUND" AND NOT "${links_len}" EQUAL 0)
             math(EXPR links_end "${links_len} - 1")
             foreach(links_idx RANGE 0 ${links_end})
                 string(JSON dir GET ${json_output} ${idx} links ${links_idx})
@@ -544,7 +544,7 @@ macro(_xrepo_fetch_json)
 
         # Loop over syslinks.
         string(JSON syslinks_len ERROR_VARIABLE syslinks_error LENGTH ${json_output} ${idx} "syslinks")
-        if("${syslinks_error}" STREQUAL "NOTFOUND")
+        if("${syslinks_error}" STREQUAL "NOTFOUND" AND NOT "${syslinks_len}" EQUAL 0)
             math(EXPR syslinks_end "${syslinks_len} - 1")
             foreach(syslinks_idx RANGE 0 ${syslinks_end})
                 string(JSON dir GET ${json_output} ${idx} syslinks ${syslinks_idx})
@@ -555,7 +555,7 @@ macro(_xrepo_fetch_json)
 
         # Loop over defines.
         string(JSON defines_len ERROR_VARIABLE defines_error LENGTH ${json_output} ${idx} "defines")
-        if("${defines_error}" STREQUAL "NOTFOUND")
+        if("${defines_error}" STREQUAL "NOTFOUND" AND NOT "${defines_len}" EQUAL 0)
             math(EXPR defines_end "${defines_len} - 1")
             foreach(defines_idx RANGE 0 ${defines_end})
                 string(JSON dir GET ${json_output} ${idx} defines ${defines_idx})
