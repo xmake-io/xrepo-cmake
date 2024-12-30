@@ -619,6 +619,7 @@ macro(_xrepo_fetch_json)
 
     if(DEFINED links)
         set(${package_name}_LINK_LIBRARIES "${links}" CACHE INTERNAL "")
+        set(${package_name}_LIBRARIES "${links}" CACHE INTERNAL "")
         list(APPEND xrepo_vars_${package_name} ${package_name}_LINK_LIBRARIES)
         message(STATUS "xrepo: ${package_name}_LINK_LIBRARIES ${${package_name}_LINK_LIBRARIES}")
     else()

@@ -11,14 +11,14 @@ cmake -DXREPO_PACKAGE_VERBOSE=ON example | tee $output
 grep -E 'mode=debug pcre2' $output
 grep -E "pcre2_INCLUDE_DIRS" $output
 grep -E "pcre2_LIBRARY_DIRS" $output
-grep -E "pcre2_LIBRARIES" $output
+grep -E "pcre2_LINK_LIBRARIES" $output
 grep -E "pcre2_DEFINITIONS" $output
 grep -E "gflags prepend to CMAKE_PREFIX_PATH" $output
 grep -E "glog prepend to CMAKE_PREFIX_PATH" $output
 grep -E "zlib_INCLUDE_DIRS" $output
 grep -E "zlib prepend to CMAKE_PREFIX_PATH" $output
 grep -E "pkg_check_modules pcre2_CFLAGS.*packages/p/pcre2" $output
-grep -E "target_link_libraries\(example-bin PRIVATE pcre2-posix;pcre2-8\)" $output
+grep -E "target_link_libraries\(example-bin PRIVATE .*pcre2-posix.a;.*pcre2-8.a\)" $output
 grep -v -E "xrepo: target_link_libraries\(example-bin PRIVATE z\)" $output
 make
 
@@ -42,4 +42,3 @@ grep -E "pcre2 $match_cached_output" $output
 grep -E "gflags 2.2.2 $match_cached_output" $output
 grep -E "example/packages/glog.lua" $output
 grep -E "myzlib $match_cached_output" $output
-
