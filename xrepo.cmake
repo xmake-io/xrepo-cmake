@@ -30,6 +30,11 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #          If specified, include all dependent libraries' settings in various
 #          variables. Also add all dependent libraries' install dir to
 #          CMAKE_PREFIX_PATH.
+#      USE_ABSOLUTE_LIBS: optional
+#          If specified, forces the linker to use absolute paths to library files rather than
+#          relying on the -l flag which only specifies the library name. This can be particularly
+#          useful when you need to ensure that the linker finds the correct library version,
+#          especially in environments where multiple versions of the same library might be present.
 #      MODE: optional, debug|release
 #          Pass `--mode` option to xrepo install command. If not specified,
 #          `--mode` option is not passed.
@@ -47,6 +52,7 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #          [CONFIGS feature1=true,feature2=false]
 #          [CONFIGS path/to/script.lua]
 #          [DEPS]
+#          [USE_ABSOLUTE_LIBS]
 #          [MODE debug|release]
 #          [OUTPUT verbose|diagnosis|quiet]
 #          [DIRECTORY_SCOPE]
@@ -255,7 +261,7 @@ function(xrepo_package package)
         return()
     endif()
 
-    set(options "DIRECTORY_SCOPE;DEPS")
+    set(options "DIRECTORY_SCOPE;DEPS;USE_ABSOLUTE_LIBS")
     set(one_value_args CONFIGS MODE OUTPUT ALIAS)
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "" ${ARGN})
 
@@ -530,34 +536,39 @@ macro(_xrepo_fetch_json)
             endif()
         endif()
 
-        # Loop over linkdirs.
-        string(JSON linkdirs_type ERROR_VARIABLE linkdirs_error TYPE ${json_output} ${idx} "linkdirs")
-        if("${linkdirs_type}" STREQUAL "STRING")
-            string(JSON dir GET ${json_output} ${idx} "linkdirs")
-            list(APPEND linkdirs ${dir})
-        elseif("${linkdirs_type}" MATCHES "ARRAY|OBJECT")
-            string(JSON linkdirs_len ERROR_VARIABLE linkdirs_error LENGTH ${json_output} ${idx} "linkdirs")
-            if("${linkdirs_error}" STREQUAL "NOTFOUND" AND NOT "${linkdirs_len}" EQUAL 0)
-                math(EXPR linkdirs_end "${linkdirs_len} - 1")
-                foreach(linkdirs_idx RANGE 0 ${linkdirs_end})
-                    string(JSON dir GET ${json_output} ${idx} "linkdirs" ${linkdirs_idx})
-                    list(APPEND linkdirs ${dir})
-                    #message(STATUS "xrepo DEBUG: linkdirs ${idx} ${linkdirs_idx} ${dir}")
-                endforeach()
+        if (NOT ARG_USE_ABSOLUTE_LIBS)
+            set (links_tag "links")
+            # Loop over linkdirs.
+            string(JSON linkdirs_type ERROR_VARIABLE linkdirs_error TYPE ${json_output} ${idx} "linkdirs")
+            if("${linkdirs_type}" STREQUAL "STRING")
+                string(JSON dir GET ${json_output} ${idx} "linkdirs")
+                list(APPEND linkdirs ${dir})
+            elseif("${linkdirs_type}" MATCHES "ARRAY|OBJECT")
+                string(JSON linkdirs_len ERROR_VARIABLE linkdirs_error LENGTH ${json_output} ${idx} "linkdirs")
+                if("${linkdirs_error}" STREQUAL "NOTFOUND" AND NOT "${linkdirs_len}" EQUAL 0)
+                    math(EXPR linkdirs_end "${linkdirs_len} - 1")
+                    foreach(linkdirs_idx RANGE 0 ${linkdirs_end})
+                        string(JSON dir GET ${json_output} ${idx} "linkdirs" ${linkdirs_idx})
+                        list(APPEND linkdirs ${dir})
+                        #message(STATUS "xrepo DEBUG: linkdirs ${idx} ${linkdirs_idx} ${dir}")
+                    endforeach()
+                endif()
             endif()
+        else()
+            set (links_tag "libfiles")
         endif()
 
         # Loop over links.
-        string(JSON links_type ERROR_VARIABLE links_error TYPE ${json_output} ${idx} "libfiles")
+        string(JSON links_type ERROR_VARIABLE links_error TYPE ${json_output} ${idx} ${links_tag})
         if("${links_type}" STREQUAL "STRING")
-            string(JSON libfile GET ${json_output} ${idx} "libfiles")
+            string(JSON libfile GET ${json_output} ${idx} ${links_tag})
             list(APPEND links ${libfile})
         elseif("${links_type}" MATCHES "ARRAY|OBJECT")
-            string(JSON links_len ERROR_VARIABLE links_error LENGTH ${json_output} ${idx} "libfiles")
+            string(JSON links_len ERROR_VARIABLE links_error LENGTH ${json_output} ${idx} ${links_tag})
             if("${links_error}" STREQUAL "NOTFOUND" AND NOT "${links_len}" EQUAL 0)
                 math(EXPR links_end "${links_len} - 1")
                 foreach(links_idx RANGE 0 ${links_end})
-                    string(JSON libfile GET ${json_output} ${idx} "libfiles" ${links_idx})
+                    string(JSON libfile GET ${json_output} ${idx} ${links_tag} ${links_idx})
                     list(APPEND links ${libfile})
                     #message(STATUS "xrepo DEBUG: links ${idx} ${links_idx} ${libfile}")
                 endforeach()
