@@ -3,18 +3,16 @@ cmake_minimum_required(VERSION 3.13.0)
 project(example LANGUAGES C CXX ASM)
 
 # Download xrepo.cmake if not exists in build directory.
-# You should use "${CMAKE_BINARY_DIR}/xrepo.cmake"
-if(NOT EXISTS "../xrepo.cmake")
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/xrepo.cmake")
     message(STATUS "Downloading xrepo.cmake from https://github.com/xmake-io/xrepo-cmake/")
     # mirror https://cdn.jsdelivr.net/gh/xmake-io/xrepo-cmake@main/xrepo.cmake
     file(DOWNLOAD "https://raw.githubusercontent.com/xmake-io/xrepo-cmake/main/xrepo.cmake"
-                  "../xrepo.cmake"
+                  "${CMAKE_BINARY_DIR}/xrepo.cmake"
                   TLS_VERIFY ON)
 endif()
 
 # Include xrepo.cmake so we can use xrepo_package function.
-# You should use "${CMAKE_BINARY_DIR}/xrepo.cmake"
-include(../xrepo.cmake)
+include(${CMAKE_BINARY_DIR}/xrepo.cmake)
 
 # Call `xrepo_package` function to use default pcre2
 xrepo_package("pcre2" MODE debug)
