@@ -67,14 +67,14 @@ set(XREPO_XMAKEFILE "" CACHE STRING "Xmake script file of Xrepo package")
 #       `target_link_directories` to use the package.
 #     - User should figure out what library to use for `target_link_libraries`.
 #     - If `DIRECTORY_SCOPE` is specified, execute following code so the package
-#       can be used in cmake's direcotry scope:
+#       can be used in cmake's directory scope:
 #           include_directories(foo_INCLUDE_DIRS)
 #           link_directories(foo_LIBRARY_DIRS)
 # 3. Append package install directory to `CMAKE_PREFIX_PATH`.
 
 function(_install_xmake_program)
     if (NOT XMAKE_RELEASE_LATEST)
-        set(XMAKE_RELEASE_LATEST 2.9.4)
+        set(XMAKE_RELEASE_LATEST 3.0.3)
     endif()
     set(XMAKE_VERSION master)
     set(XMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/xmake)
@@ -217,8 +217,8 @@ function(_detect_toolchain)
         get_filename_component(_compiler_name "${CMAKE_C_COMPILER}" NAME_WLE)
     elseif(DEFINED CMAKE_CXX_COMPILER)
         get_filename_component(_compiler_name "${CMAKE_CXX_COMPILER}" NAME_WLE)
-        string(REPLACE "g++" "gcc" "${_compiler_name}" _compiler_name)
-        string(REPLACE "clang++" "clang" "${_compiler_name}" _compiler_name)
+        string(REPLACE "g++" "gcc" _compiler_name "${_compiler_name}")
+        string(REPLACE "clang++" "clang" _compiler_name "${_compiler_name}")
     else()
         # Shouldn't reach here because cmake will try to detect compiler and set
         # corresponding variables.
@@ -375,7 +375,7 @@ function(xrepo_package package)
 
     _xrepo_finish_package_setup(${package_name})
 
-    # Store xrepo command and arguments for furture comparison.
+    # Store xrepo command and arguments for future comparison.
     set(_cache_xrepo_cmdargs_${package_name} "${_xrepo_cmdargs_${package_name}}" CACHE INTERNAL "")
 endfunction()
 
@@ -421,7 +421,7 @@ function(xrepo_target_packages target)
     endforeach()
 endfunction()
 
-# Append parent directorie of include directory to CMAKE_PREFIX_PATH.
+# Append parent directory of include directory to CMAKE_PREFIX_PATH.
 macro(_xrepo_set_cmake_prefix_path package_name)
     # CMake looks for quite a few directories under each prefix directory for config-file.cmake.
     # Thus Using CMAKE_PREFIX_PATH is easier and more reliable for config-file packages to be found

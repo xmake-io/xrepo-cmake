@@ -99,7 +99,7 @@ After calling `xrepo_package(foo)`, there are three ways to use `foo` package:
 1. Call `find_package(foo)` if package provides cmake config-files.
     - Refer to CMake [`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html) documentation for more details.
 2. If the package does not provide cmake config files or find modules
-   - Following variables can be used to use the pacakge (variable names following cmake
+   - Following variables can be used to use the package (variable names following cmake
      find modules [standard variable names](https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names))
      - `foo_INCLUDE_DIRS`
      - `foo_LIBRARY_DIRS`
@@ -252,7 +252,7 @@ We can write a custom package in xmake.lua, please refer [Define Xrepo package](
 
 ### Options and variables for `xrepo.cmake`
 
-Following options can be speicified with `cmake -D<var>=<value>`.
+Following options can be specified with `cmake -D<var>=<value>`.
 Or use `set(var value)` in `CMakeLists.txt`.
 
 - `XMAKE_CMD`: string, defaults to empty string
@@ -277,7 +277,7 @@ Or use `set(var value)` in `CMakeLists.txt`.
 
 ### Switching compiler and cross compilation
 
-Following variables controll cross compilation. Note: to specify a different compiler other than
+Following variables control cross compilation. Note: to specify a different compiler other than
 the default one on system, platform must be set to "cross".
 
 - `XREPO_TOOLCHAIN`: string, defaults to empty string
@@ -391,5 +391,5 @@ the specified package.
 
 For CMake 3.19 and later which has JSON support, `xrepo_package` parses the JSON
 output. For previous version of CMake, `xrepo_package` uses only the `--cflags` option
-to get package include directory. Library and cmake module directory are infered from that
+to get package include directory. Library and cmake module directory are inferred from that
 directory, so it maybe unreliable to detect the correct paths.

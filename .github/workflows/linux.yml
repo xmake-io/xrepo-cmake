@@ -3,6 +3,7 @@ name: Linux
 on:
   pull_request:
   push:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,16 +17,16 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Installation
+      - name: Install CMake 3.22.0
+        # gflags 2.2.2 uses cmake 3.0, and the latest cmake doesn't support cmake that <= 3.5
+        # To pass the tests, install the specified cmake
         run: |
-          sudo apt-get install -y cmake
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 60
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60
-          sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-9 60
-          sudo update-alternatives --set g++ /usr/bin/g++-9
-          sudo update-alternatives --set gcc /usr/bin/gcc-9
-          sudo update-alternatives --set cpp /usr/bin/cpp-9
+          set -e
+          curl -sL https://cmake.org/files/v3.22/cmake-3.22.0-linux-x86_64.tar.gz | tar -xz
+          echo "$(pwd)/cmake-3.22.0-linux-x86_64/bin" >> $GITHUB_PATH
+          cmake --version
 
       - name: Tests
         run: |
           ./scripts/test-unix.sh
+

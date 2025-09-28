@@ -5,8 +5,8 @@ package("myzlib")
     add_urls("https://github.com/madler/zlib/archive/$(version).tar.gz",
              "https://github.com/madler/zlib.git")
 
-    add_versions("v1.2.10", "42cd7b2bdaf1c4570e0877e61f2fdc0bce8019492431d054d3d86925e5058dc5")
-    add_versions("v1.2.11", "629380c90a77b964d896ed37163f5c3a34f6e6d897311f1df2a7016355c45eff")
+    add_versions("v1.3", "b5b06d60ce49c8ba700e0ba517fa07de80b5d4628a037f4be8ad16955be7a7c0")
+    add_versions("v1.3.1", "17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c")
 
     on_install(function (package)
         io.writefile("xmake.lua", [[

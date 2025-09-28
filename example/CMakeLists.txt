@@ -26,7 +26,7 @@ xrepo_package("glog"
     #DEPS
     CONFIGS "packages/glog.lua")
 
-# find_pacakge works because package install dir is added to CMAKE_PREFIX_PATH.
+# find_package works because package install dir is added to CMAKE_PREFIX_PATH.
 find_package(gflags)
 find_package(glog)
 
@@ -40,8 +40,8 @@ add_executable(example-bin "")
 target_sources(example-bin PRIVATE
     src/main.cpp
 )
-# For packges that does not provide cmake config-file packages,
-# xrepo_target_packges is convenient to setup include, library path and link targets.
+# For packages that does not provide cmake config-file packages,
+# xrepo_target_packages is convenient to setup include, library path and link targets.
 # We can specify multiple packages in a single call.
 #xrepo_target_packages(example-bin pcre2 zlib)
 
